@@ -1,0 +1,10 @@
+created: 20240912104137297
+modified: 20240912111725195
+tags: 
+title: tooltip-template
+type: text/vnd.tiddlywiki
+
+<div> 
+  <$link>{{!!title}}</$link>
+	(<$view field="start" format=date template="DDth mmm YYYY" /> - <$view field="end" format=date template="DDth mmm YYYY"/>)
+</div> 

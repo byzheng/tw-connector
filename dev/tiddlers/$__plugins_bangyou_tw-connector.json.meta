@@ -1,0 +1,12 @@
+author: Bangyou Zheng
+core-version: >5.1.23
+created: 20241208234130793
+description: A small plugin for Chrome Extension PubConnector
+modified: 20241209004526584
+name: TW-Connector
+plugin-draft: plugin
+source: https://tw-connector.bangyou.me
+tags: 
+title: $:/plugins/bangyou/tw-connector
+type: application/json
+version: 0.0.1

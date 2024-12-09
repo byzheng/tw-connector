@@ -1,0 +1,83 @@
+created: 20220727034051393
+modified: 20240912112318320
+order: 10
+tags: doc Contents tutorial
+title: GanttWidget
+type: text/vnd.tiddlywiki
+
+!! Gantt Widget
+
+The `gantt` widget is to render a gantt chart.
+
+!! Syntax
+
+```
+<$gantt filter="[tag[Event]]" />
+```
+
+
+!! Content and attributes
+|!Attributes |!Type |!Description |
+|filter |required|The `filter` to select events |
+|start |optional|The field for event start (format `YYYYmmmddd`, e.g. 20240304). If missing, the `start` field will be used |
+|end |optional|The field for event end (format `YYYYmmmddd`, e.g. 20240304). If missing, the `end` field will be used |
+|people |optional|The field for event people which treats as a list. If missing, the `people` field will be used |
+|eventTemplate |optional|A tiddler for event template. If missing, the caption or title field will be used to show event |
+|tooltipTemplate |optional|A tiddler for tooltip template. If missing, the caption or title field will be used as tooltip |
+
+!! Details
+
+The field `caption` or `title` (if `caption` is not existed) is displayed on Gantt Chart.
+
+If `start` or `end` is missing or non-valid dates, the earlist and latest years are used.
+
+!! Example
+
+In default, it will use start and end fields to render a Gantt Chart.
+
+```
+<$gantt filter="[tag[Event]]"/>
+```
+
+<$gantt filter="[tag[Event]]"/>
+
+People can be ignored if it is not exist
+
+
+```
+<$gantt filter="[tag[Event]]" people="ignore"/>
+```
+
+<$gantt filter="[tag[Event]]" people="ignore"/>
+
+
+A template can be specified to render event (e.g. [[event-template]])
+
+```
+<$gantt filter="[tag[Event]]" people="ignore" eventTemplate="event-template"/>
+```
+
+<$gantt filter="[tag[Event]]" people="ignore" eventTemplate="event-template"/>
+
+
+
+A template can be specified to render tooltip (e.g. [[tooltip-template]])
+
+```
+<$gantt filter="[tag[Event]]" people="ignore" tooltipTemplate="tooltip-template"/>
+```
+
+<$gantt filter="[tag[Event]]" people="ignore" tooltipTemplate="tooltip-template"/>
+
+
+
+Alternative fields can be used to generate Gantt Chart, e.g. created and modified
+
+
+```
+<$gantt filter="[tag[Event]]" start = "created" end = "modified" people="ignore"/>
+```
+
+<$gantt filter="[tag[Event]]" start = "created" end = "modified" people="ignore"/>
+
+
