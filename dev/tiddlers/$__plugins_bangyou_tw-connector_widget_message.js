@@ -91,6 +91,7 @@ message widget
                 if (isSaveCanonical === "enable") {
                     $tw.wiki.addTiddler(new $tw.Tiddler({
                         title: tiddler,
+                        url: request.url,
                         _canonical_uri: filename,
                         type: contentType[1]
                     }));
