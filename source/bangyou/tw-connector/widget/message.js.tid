@@ -31,30 +31,6 @@ message widget
     MessageWidget.prototype = new Widget();
 
 
-    function getTimestampedFilename(base, ext) {
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, '0'); // months are 0-based
-        const day = String(now.getDate()).padStart(2, '0');
-        const hours = String(now.getHours()).padStart(2, '0');
-        const minutes = String(now.getMinutes()).padStart(2, '0');
-        const seconds = String(now.getSeconds()).padStart(2, '0');
-    
-        return base  + "/" + `${year}` + "/" + `${year}${month}${day}${hours}${minutes}${seconds}` + "." + ext;
-    }
-
-    function getImageExtension(base64String) {
-        // Use a regular expression to match the format "data:image/<extension>;base64,"
-        const match = base64String.match(/^data:image\/(\w+);base64,/);
-        
-        // If there's a match, return the captured extension (e.g., "png", "jpeg")
-        if (match) {
-            return match[1];
-        } else {
-            throw new Error("Invalid base64 image format");
-        }
-    }
-
     /*
     Render this widget into the DOM
     */
@@ -74,6 +50,8 @@ message widget
         var the_story = new $tw.Story({ wiki: $tw.wiki });
 
         containerDom.addEventListener("research-message", function (event) {
+            
+            window.focus();
             let request = event.detail.request;
             if (request.method === "open_tiddler") {
                 var tiddler = request.tiddler;
@@ -97,34 +75,9 @@ message widget
                 if ($tw.wiki.tiddlerExists(tiddler)) {
                     return;
                 }
-                
+
                 if (request.data.image !== null) {
-                    const extension = getImageExtension(request.data.image);
-                    const base64Data = request.data.image.replace(/^data:image\/\w+;base64,/, "");
-                    const fileName = getTimestampedFilename("/files/images", extension);
-
-                    // URL for the TiddlyWiki route you created
-                    const uploadUrl = `${fileName}`;
-
-                    fetch(uploadUrl, {
-                        method: "PUT",
-                        headers: {
-                            "Content-Type": "text/plain",
-                            "X-Requested-With": "TiddlyWiki"
-                        },
-                        body: base64Data  // Send the base64-encoded image data without the prefix
-                    })
-                    .then(response => {
-                        if (response.ok) {
-                            console.log(`Successfully uploaded ${fileName}`);
-                        } else {
-                            console.error("Upload failed:", response.statusText);
-                        }
-                    })
-                    .catch(error => {
-                        console.error("Error uploading image:", error);
-                    });
-                    request.data.image = fileName;
+                    request.data.image = uploadImage(request.data.image);
                 }
                 $tw.wiki.addTiddler(new $tw.Tiddler(request.data));
                 the_story.addToStory(tiddler, "", {
@@ -132,6 +85,37 @@ message widget
                     openLinkFromOutsideRiver: openLinkFromOutsideRiver
                 });
                 the_story.addToHistory(tiddler);
+            } else if (request.method === "new_image") {
+                var image = request.image;
+                if (image === undefined) {
+                    return;
+                }
+                if (image === null) {
+                    return;
+                }
+                var filename = uploadImage(request.image);
+                var tiddler = filename.split('/').pop();
+                const contentType = request.image.match(/^data:(.*?);base64,/);
+                // Create canonical images
+                var isSaveCanonical = $tw.wiki.getTiddlerText("$:/config/tw-connector/SaveCanonicalTiddler") || "disable";
+                if (isSaveCanonical === "enable") {
+                    $tw.wiki.addTiddler(new $tw.Tiddler({
+                        title: tiddler,
+                        _canonical_uri: filename,
+                        type: contentType[1]
+                    }));
+
+                    the_story.addToStory(tiddler, "", {
+                        openLinkFromInsideRiver: openLinkFromInsideRiver,
+                        openLinkFromOutsideRiver: openLinkFromOutsideRiver
+                    });
+                }
+                // copy image macro
+                var copyImgMacro = $tw.wiki.getTiddlerText("$:/config/tw-connector/CopyImageMacro") || " [img[$filename$]] ";
+                if (copyImgMacro !== "") {
+                    const img_macro = copyImgMacro.replace("$filename$", filename);
+                    navigator.clipboard.writeText(img_macro);
+                }
             }
         });
 
@@ -139,8 +123,81 @@ message widget
 
     };
 
-
-
     exports.message = MessageWidget;
+
+
+    var FilenameWidget = function (parseTreeNode, options) {
+        this.initialise(parseTreeNode, options);
+    };
+    FilenameWidget.prototype = new Widget();
+
+
+    FilenameWidget.prototype.render = function (parent, nextSibling) {
+        this.parentDomNode = parent;
+
+        var containerDom = document.createElement('span');
+        containerDom.innerText = getTimestampedFilename("png");
+        parent.innerHTML = '';
+        parent.insertBefore(containerDom, nextSibling);
+
+    }
+
+    FilenameWidget.prototype.refresh = function (changedTiddlers) {
+        this.refreshSelf();
+        return true;
+    };
+
+    exports.imagefilepath = FilenameWidget;
+
+
+    function getTimestampedFilename(ext) {
+        var format = $tw.wiki.getTiddlerText("$:/config/tw-connector/ImageFileFormat") || "images/YYYY/YYYY0MM0DD0hh0mm0ss";
+        const now = new Date();
+        var path = $tw.utils.formatDateString(now, format)
+        return "/files/" + path + "." + ext;
+    }
+
+    function getImageExtension(base64String) {
+        // Use a regular expression to match the format "data:image/<extension>;base64,"
+        const match = base64String.match(/^data:image\/(\w+);base64,/);
+
+        // If there's a match, return the captured extension (e.g., "png", "jpeg")
+        if (match) {
+            return match[1];
+        } else {
+            throw new Error("Invalid base64 image format");
+        }
+    }
+
+
+    function uploadImage(image) {
+        const extension = getImageExtension(image);
+        const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
+        const fileName = getTimestampedFilename(extension);
+
+        // URL for the TiddlyWiki route you created
+        const uploadUrl = `${fileName}`;
+
+        fetch(uploadUrl, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "text/plain",
+                "X-Requested-With": "TiddlyWiki"
+            },
+            body: base64Data  // Send the base64-encoded image data without the prefix
+        })
+            .then(response => {
+                if (response.ok) {
+                    console.log(`Successfully uploaded ${fileName}`);
+                } else {
+                    console.error("Upload failed:", response.statusText);
+                }
+            })
+            .catch(error => {
+                console.error("Error uploading image:", error);
+            });
+        return (fileName);
+    }
+
 
 })();

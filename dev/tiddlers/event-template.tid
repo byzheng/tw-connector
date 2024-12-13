@@ -1,7 +1,0 @@
-created: 20240912111959306
-modified: 20240913060854039
-tags: 
-title: event-template
-type: text/vnd.tiddlywiki
-
-<span style="color: black;"><$link>{{!!title}}</$link> (<$view field="start" format=date template="DD/mmm/YYYY" /> - <$view field="end" format=date template="DD/mmm/YYYY"/>)</span> 

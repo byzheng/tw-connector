@@ -1,9 +1,12 @@
 created: 20200312083811789
-modified: 20240910111002845
+modified: 20241213103901713
 tags: doc
 title: ChangeLog
 type: text/vnd.tiddlywiki
 
+!! Release 0.0.3 
+* ''13th December, 2024''
+* [NEW] Accept image from web pages and save to `files` 
 
 !! Release 0.0.1 
 * ''10th September, 2024''
