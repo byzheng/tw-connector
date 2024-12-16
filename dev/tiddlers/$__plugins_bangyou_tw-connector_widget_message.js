@@ -40,7 +40,7 @@ message widget
         var the_story = new $tw.Story({ wiki: $tw.wiki });
 
         containerDom.addEventListener("research-message", function (event) {
-            
+
             window.focus();
             let request = event.detail.request;
             if (request.method === "open_tiddler") {
@@ -106,6 +106,10 @@ message widget
                 if (copyImgMacro !== "") {
                     const img_macro = copyImgMacro.replace("$filename$", filename);
                     navigator.clipboard.writeText(img_macro);
+                    var InsertIntoTextArea = $tw.wiki.getTiddlerText("$:/config/tw-connector/InsertIntoTextArea") || "disable";
+                    if (InsertIntoTextArea === "enable") {
+                        insertTextAtCursor(document, img_macro);
+                    }
                 }
             }
         });
@@ -189,6 +193,44 @@ message widget
             });
         return (fileName);
     }
+
+    function insertTextAtCursor(document, text) {
+        // Get the active element (should be a text field or textarea)
+        const activeElement = document.activeElement;
+
+        // Check if the active element is editable
+        if (activeElement && (activeElement.tagName === 'TEXTAREA' || activeElement.tagName === 'INPUT')) {
+            const start = activeElement.selectionStart;
+            const end = activeElement.selectionEnd;
+
+            // Get the current value of the input/textarea
+            const currentValue = activeElement.value;
+
+            // Insert the text at the cursor position
+            activeElement.value = currentValue.slice(0, start) + text + currentValue.slice(end);
+
+            // Update the cursor position
+            activeElement.selectionStart = activeElement.selectionEnd = start + text.length;
+        } else if (activeElement && activeElement.isContentEditable) {
+            // For contentEditable elements
+            const range = window.getSelection().getRangeAt(0);
+            range.deleteContents(); // Remove any selected text
+            const textNode = document.createTextNode(text);
+            range.insertNode(textNode);
+
+            // Move the cursor after the inserted text
+            range.setStartAfter(textNode);
+            range.setEndAfter(textNode);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+        } else {
+            console.warn("No editable area is currently active.");
+        }
+    }
+
+    // Example usage
+    insertTextAtCursor("Hello, world!");
 
 
 })();

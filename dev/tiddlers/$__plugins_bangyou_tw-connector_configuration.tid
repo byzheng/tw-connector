@@ -1,5 +1,5 @@
 created: 20241213062008173
-modified: 20241213102125773
+modified: 20241216031008372
 tags: 
 title: $:/plugins/bangyou/tw-connector/configuration
 type: text/vnd.tiddlywiki
@@ -14,9 +14,12 @@ type: text/vnd.tiddlywiki
 |<small>For formatting options, see [ext[DateFormat|https://tiddlywiki.com/static/DateFormat.html]] in TiddlyWiki.</small> |
 |''Example'' <$imagefilepath /> |
 |&nbsp; |
+|&nbsp; |
 |<$link to="$:/config/tw-connector/CopyImageMacro">Copy Image Macro to Clipboard</$link> |
 |<$edit-text tiddler="$:/config/tw-connector/CopyImageMacro" default=" [img[$filename$]] " tag="input" /> |
 |<small>Use `$filename$` as a placeholder in the image macro.</small> |
-
+| <$checkbox tiddler="$:/config/tw-connector/InsertIntoTextArea" field="text" checked="enable" unchecked="disable" default="disable"><$link to="$:/config/tw-connector/InsertIntoTextArea">Insert into Text Area</$link></$checkbox> |
+|&nbsp; |
+|&nbsp; |
 | <$checkbox tiddler="$:/config/tw-connector/SaveCanonicalTiddler" field="text" checked="enable" unchecked="disable" default="disable"><$link to="$:/config/tw-connector/SaveCanonicalTiddler">Save Canonical Tiddler</$link></$checkbox> |
 
