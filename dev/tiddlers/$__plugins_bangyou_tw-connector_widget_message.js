@@ -211,26 +211,6 @@ message widget
 
             // Update the cursor position
             activeElement.selectionStart = activeElement.selectionEnd = start + text.length;
-        } else if (activeElement && activeElement.isContentEditable) {
-            // For contentEditable elements
-            const range = window.getSelection().getRangeAt(0);
-            range.deleteContents(); // Remove any selected text
-            const textNode = document.createTextNode(text);
-            range.insertNode(textNode);
-
-            // Move the cursor after the inserted text
-            range.setStartAfter(textNode);
-            range.setEndAfter(textNode);
-            const selection = window.getSelection();
-            selection.removeAllRanges();
-            selection.addRange(range);
-        } else {
-            console.warn("No editable area is currently active.");
-        }
+        } 
     }
-
-    // Example usage
-    insertTextAtCursor("Hello, world!");
-
-
 })();
