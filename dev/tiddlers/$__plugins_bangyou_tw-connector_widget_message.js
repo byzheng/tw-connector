@@ -105,7 +105,7 @@ message widget
                 var copyImgMacro = $tw.wiki.getTiddlerText("$:/config/tw-connector/CopyImageMacro") || " [img[$filename$]] ";
                 if (copyImgMacro !== "") {
                     const img_macro = copyImgMacro.replace("$filename$", filename);
-                    navigator.clipboard.writeText(img_macro);
+                    copyToClipboard(img_macro);
                     var InsertIntoTextArea = $tw.wiki.getTiddlerText("$:/config/tw-connector/InsertIntoTextArea") || "disable";
                     if (InsertIntoTextArea === "enable") {
                         insertTextAtCursor(document, img_macro);
@@ -193,13 +193,22 @@ message widget
             });
         return (fileName);
     }
-
+    async function copyToClipboard(text) {
+        try {
+            await navigator.clipboard.writeText(text);
+            console.log("Text copied to clipboard:", text);
+        } catch (err) {
+            console.error("Failed to copy text:", err);
+        }
+    }
+    
     function insertTextAtCursor(document, text) {
         // Get the active element (should be a text field or textarea)
         const activeElement = document.activeElement;
-
         // Check if the active element is editable
-        if (activeElement && (activeElement.tagName === 'TEXTAREA' || activeElement.tagName === 'INPUT')) {
+        if (activeElement && (
+            activeElement.tagName.toLowerCase() === 'textarea' || 
+            activeElement.tagName.toLowerCase() === 'input')) {
             const start = activeElement.selectionStart;
             const end = activeElement.selectionEnd;
 
