@@ -33,11 +33,16 @@ message widget
         containerDom.innerText = "message";
         containerDom.hidden = true;
 
-        // Event 
 
+        var openLinkFromOutsideRiver = $tw.wiki.getTiddler("$:/config/Navigation/openLinkFromOutsideRiver").fields.text;
         var openLinkFromInsideRiver = $tw.wiki.getTiddler("$:/config/Navigation/openLinkFromInsideRiver").fields.text;
-        var openLinkFromOutsideRiver = $tw.wiki.getTiddler("$:/config/Navigation/openLinkFromOutsideRiver").fields.text
+        
         var the_story = new $tw.Story({ wiki: $tw.wiki });
+        // Make the_story accessible to helper functions
+        this.the_story = the_story;
+        this.openLinkFromInsideRiver = openLinkFromInsideRiver;
+        this.openLinkFromInsideRiver = openLinkFromInsideRiver;
+        var _this = this;
 
         containerDom.addEventListener("research-message", function (event) {
 
@@ -57,6 +62,8 @@ message widget
                     openLinkFromOutsideRiver: openLinkFromOutsideRiver
                 });
                 the_story.addToHistory(tiddler);
+            } else if (request.method === "new_bibtex_entry") {
+                _this.addBibtexEntry(request);
             } else if (request.method === "new_colleague") {
                 var tiddler = request.data.title;
                 if (tiddler === undefined) {
@@ -116,6 +123,52 @@ message widget
 
         parent.insertBefore(containerDom, nextSibling);
 
+    };
+
+    
+    MessageWidget.prototype.addBibtexEntry = function(request) {
+        const bibtex = request.bibtex;
+        const title = request.title;
+        if (bibtex === undefined) {
+            return;
+        }
+        if (title === undefined || Array.isArray(title)) {
+            return;
+        }
+        
+        
+
+        // Check if the tiddler already exists
+        if (!$tw.wiki.tiddlerExists("$:/plugins/tiddlywiki/bibtex")) {
+            return;
+        }
+        // Check if the tiddler already exists
+        if ($tw.wiki.tiddlerExists(title)) {
+            return;
+        }
+
+        let new_tiddler = $tw.wiki.deserializeTiddlers(null,
+            bibtex,
+            {title: title},
+            {deserializer: "application/x-bibtex"}
+        );
+
+        if (!Array.isArray(new_tiddler) || new_tiddler.length === 0) {
+            return;
+        }
+        new_tiddler = new_tiddler[0];
+        new_tiddler["tags"] = ["bibtex-entry"];
+        new_tiddler["created"] = $tw.utils.formatDateString(new Date(), "[UTC]YYYY0MM0DD0hh0mm0ss0XXX");
+        new_tiddler["modified"] = new_tiddler["created"];
+
+
+        $tw.wiki.addTiddler(new $tw.Tiddler(new_tiddler));		
+        this.the_story.addToStory(title, "", {
+            openLinkFromInsideRiver: this.openLinkFromInsideRiver,
+            openLinkFromOutsideRiver: this.openLinkFromOutsideRiver
+        });
+        this.the_story.addToHistory(title);
+        return;
     };
 
     exports.message = MessageWidget;
@@ -201,13 +254,13 @@ message widget
             console.error("Failed to copy text:", err);
         }
     }
-    
+
     function insertTextAtCursor(document, text) {
         // Get the active element (should be a text field or textarea)
         const activeElement = document.activeElement;
         // Check if the active element is editable
         if (activeElement && (
-            activeElement.tagName.toLowerCase() === 'textarea' || 
+            activeElement.tagName.toLowerCase() === 'textarea' ||
             activeElement.tagName.toLowerCase() === 'input')) {
             const start = activeElement.selectionStart;
             const end = activeElement.selectionEnd;
@@ -220,6 +273,7 @@ message widget
 
             // Update the cursor position
             activeElement.selectionStart = activeElement.selectionEnd = start + text.length;
-        } 
+        }
     }
+
 })();
