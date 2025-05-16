@@ -160,7 +160,7 @@ message widget
         new_tiddler["tags"] = ["bibtex-entry"];
         new_tiddler["created"] = $tw.utils.formatDateString(new Date(), "[UTC]YYYY0MM0DD0hh0mm0ss0XXX");
         new_tiddler["modified"] = new_tiddler["created"];
-
+        new_tiddler["bibtex-zotero-pdf-key"] = request.pdf_key;
 
         $tw.wiki.addTiddler(new $tw.Tiddler(new_tiddler));		
         this.the_story.addToStory(title, "", {
