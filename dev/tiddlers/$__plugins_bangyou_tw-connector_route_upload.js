@@ -30,6 +30,8 @@ exports.path = /^\/files\/(.+)$/;
 exports.bodyFormat = "stream";
 
 exports.handler = function(request, response, state) {
+	
+	
 	try {
 		let body = Buffer.from([]);
 		request.on("data", function(data) {
