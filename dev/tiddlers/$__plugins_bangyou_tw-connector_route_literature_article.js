@@ -64,11 +64,11 @@ Get literature article for a tiddler
 				response.end("File not found");
 				return;
 			}
-			let dom, htmlDoc;
+			let dom, document;
 			try {
 				// Parse the HTML content into a DOM using JSDOM
 				dom = new JSDOM(html);
-				htmlDoc = dom.window.document;
+				document = dom.window.document;
 			} catch (e) {
 				// Fail gracefully if HTML parsing fails
 				console.error("Cheerio parsing failed:", e);
@@ -78,7 +78,7 @@ Get literature article for a tiddler
 				return;
 			}
 
-			const url = getURL(htmlDoc);
+			const url = getURL(document);
 			if (!url) {
 				response.writeHead(500, { "Content-Type": "text/plain" });
 				response.end("No valid URL found in the HTML content");
@@ -86,7 +86,24 @@ Get literature article for a tiddler
 				return;
 			}
 			console.log("Found URL:", url);
+			// Remove existing script tags
+			const scripts = document.querySelectorAll('script');
+			console.log("Removing existing script tags:", scripts.length);
+			scripts.forEach(script => script.remove());
+
 			// Inject script tag before </body>
+			const hightlightScript = document.createElement('script');
+			const scriptText = $tw.wiki.getTiddler("$:/plugins/bangyou/tw-connector/script/highlight.js", "");
+
+
+			if (!scriptText) {
+				response.writeHead(500, { "Content-Type": "text/plain" });
+				response.end("Script content not found");
+				console.log("Script content not found");
+				return;
+			}
+			hightlightScript.textContent  = scriptText.fields.text || "";
+			document.body.appendChild(hightlightScript);
 			//const inject = `<script src="/files/inject.js"></script>`;
 			//const modifiedHtml = html.replace(/<\/body>/i, `${inject}</body>`);
 			const modifiedHTML = dom.serialize();
@@ -97,7 +114,7 @@ Get literature article for a tiddler
 	};
 
 
-	function getURL(htmlDoc) {
+	function getURL(document) {
 		var urlSelt = [
 			"meta[name='prism.url' i]",
 			"meta[property='og:url' i]"
@@ -105,7 +122,7 @@ Get literature article for a tiddler
 		var url;
 		for (let i = 0; i < urlSelt.length; i++) {
 
-			var ele = htmlDoc.querySelector(urlSelt[i]);
+			var ele = document.querySelector(urlSelt[i]);
 			if (ele === undefined || ele === null) {
 				continue;
 			}
