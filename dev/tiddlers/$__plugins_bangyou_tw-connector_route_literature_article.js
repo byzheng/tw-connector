@@ -15,7 +15,7 @@ Get literature article for a tiddler
 	/*jslint node: true, browser: true */
 	/*global $tw: false */
 	"use strict";
-
+	var utils = require("$:/plugins/bangyou/tw-connector/script/utils.js");
 	const fs = require('fs'); // Use promise-based fs API for async/await
 	const path = require('path');
 	const { JSDOM } = require("jsdom"); // For DOM parsing of HTML content
@@ -77,20 +77,8 @@ Get literature article for a tiddler
 				console.log("Failed to parse HTML content", e);
 				return;
 			}
-
-			const url = getURL(document);
-			if (!url) {
-				response.writeHead(500, { "Content-Type": "text/plain" });
-				response.end("No valid URL found in the HTML content");
-				console.log("No valid URL found in the HTML content");
-				return;
-			}
-			console.log("Found URL:", url);
-			// Remove existing script tags
-			const scripts = document.querySelectorAll('script');
-			console.log("Removing existing script tags:", scripts.length);
-			scripts.forEach(script => script.remove());
-
+			document = utils.getArticle(document);
+			
 			// Inject script tag before </body>
 			const hightlightScript = document.createElement('script');
 			const scriptText = $tw.wiki.getTiddler("$:/plugins/bangyou/tw-connector/script/highlight.js", "");
@@ -102,7 +90,7 @@ Get literature article for a tiddler
 				console.log("Script content not found");
 				return;
 			}
-			hightlightScript.textContent  = scriptText.fields.text || "";
+			hightlightScript.textContent = scriptText.fields.text || "";
 			document.body.appendChild(hightlightScript);
 			//const inject = `<script src="/files/inject.js"></script>`;
 			//const modifiedHtml = html.replace(/<\/body>/i, `${inject}</body>`);
@@ -112,31 +100,6 @@ Get literature article for a tiddler
 		});
 
 	};
-
-
-	function getURL(document) {
-		var urlSelt = [
-			"meta[name='prism.url' i]",
-			"meta[property='og:url' i]"
-		]
-		var url;
-		for (let i = 0; i < urlSelt.length; i++) {
-
-			var ele = document.querySelector(urlSelt[i]);
-			if (ele === undefined || ele === null) {
-				continue;
-			}
-			var attributes = ["content", "href"];
-			for (let j = 0; j < attributes.length; j++) {
-				url = ele.getAttribute(attributes[j]);
-				if (url) {
-					break;
-				}
-			}
-			break;
-		}
-		return url;
-	}
 
 
 }());
