@@ -43,18 +43,26 @@ function getArticle(document) {
         response.writeHead(500, { "Content-Type": "text/plain" });
         response.end("No valid URL found in the HTML content");
         console.log("No valid URL found in the HTML content");
-        return;
+        return document;
     }
-    console.log("Found URL:", url);
+    //console.log("Found URL:", url);
     // Remove existing script tags
     const scripts = document.querySelectorAll('script');
-    console.log("Removing existing script tags:", scripts.length);
+    //console.log("Removing existing script tags:", scripts.length);
     scripts.forEach(script => script.remove());
 
     // only keep article
-    // Define selectors to keep (and their children)
-    const keepSelectors = ['div#article__content', 'style'];
+    const siteConfig = {
+        "wiley.com": {
+            articleSelector: ['div#article__content']
+        }
+    };
+    let siteKey = Object.keys(siteConfig).find(site => url.includes(site));
+    if (!siteKey) return document;
+    let { articleSelector} = siteConfig[siteKey];
 
+    const keepDefaultSelectors = ["style"];
+    const keepSelectors = [...articleSelector, ...keepDefaultSelectors];
     const clones = [];
     keepSelectors.forEach(selector => {
         document.querySelectorAll(selector).forEach(el => {

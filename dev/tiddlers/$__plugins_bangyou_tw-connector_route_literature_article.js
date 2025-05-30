@@ -15,7 +15,9 @@ Get literature article for a tiddler
 	/*jslint node: true, browser: true */
 	/*global $tw: false */
 	"use strict";
-	var utils = require("$:/plugins/bangyou/tw-connector/script/utils.js");
+	if ($tw.node) {
+        var utils = require("$:/plugins/bangyou/tw-connector/script/utils.js");
+    }
 	const fs = require('fs'); // Use promise-based fs API for async/await
 	const path = require('path');
 	const { JSDOM } = require("jsdom"); // For DOM parsing of HTML content
@@ -92,6 +94,19 @@ Get literature article for a tiddler
 			}
 			hightlightScript.textContent = scriptText.fields.text || "";
 			document.body.appendChild(hightlightScript);
+
+			// Inject style tag before </body>
+			const styleTiddler = $tw.wiki.getTiddler("$:/plugins/bangyou/tw-connector/style/style.js");
+			if (!styleTiddler) {
+				response.writeHead(500, { "Content-Type": "text/plain" });
+				response.end("Style content not found");
+				console.log("Style content not found");
+				return;
+			}
+			const styleTag = document.createElement('style');
+			styleTag.textContent = styleTiddler.fields.text || "";
+			document.body.appendChild(styleTag);
+			
 			//const inject = `<script src="/files/inject.js"></script>`;
 			//const modifiedHtml = html.replace(/<\/body>/i, `${inject}</body>`);
 			const modifiedHTML = dom.serialize();
