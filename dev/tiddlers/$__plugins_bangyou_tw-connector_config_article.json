@@ -1,0 +1,8 @@
+{
+        "wiley.com": {
+            "articleSelector": "div#article__content"
+        },
+        "sciencedirect.com": {
+            "articleSelector": "article"
+        }
+}

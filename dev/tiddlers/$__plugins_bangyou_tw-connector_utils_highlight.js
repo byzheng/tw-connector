@@ -1,5 +1,5 @@
 /*\
-title: $:/plugins/bangyou/tw-connector/script/highlight.js
+title: $:/plugins/bangyou/tw-connector/utils/highlight.js
 type: application/javascript
 
 Hightlights for TiddlyWiki

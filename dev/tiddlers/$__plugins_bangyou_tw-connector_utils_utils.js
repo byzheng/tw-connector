@@ -14,7 +14,8 @@ Utils functions
 function getURL(document) {
     var urlSelt = [
         "meta[name='prism.url' i]",
-        "meta[property='og:url' i]"
+        "meta[property='og:url' i]",
+        "link[rel='canonical' i]"
     ]
     var url;
     for (let i = 0; i < urlSelt.length; i++) {
@@ -37,7 +38,7 @@ function getURL(document) {
 
 
 // Function to get article content for a literature
-function getArticle(document) {
+function getArticle(document, siteConfig) {
     const url = getURL(document);
     if (!url) {
         response.writeHead(500, { "Content-Type": "text/plain" });
@@ -51,16 +52,12 @@ function getArticle(document) {
     //console.log("Removing existing script tags:", scripts.length);
     scripts.forEach(script => script.remove());
 
-    // only keep article
-    const siteConfig = {
-        "wiley.com": {
-            articleSelector: ['div#article__content']
-        }
-    };
     let siteKey = Object.keys(siteConfig).find(site => url.includes(site));
     if (!siteKey) return document;
     let { articleSelector} = siteConfig[siteKey];
-
+    if (!Array.isArray(articleSelector)) {
+        articleSelector = [articleSelector];
+    }
     const keepDefaultSelectors = ["style"];
     const keepSelectors = [...articleSelector, ...keepDefaultSelectors];
     const clones = [];

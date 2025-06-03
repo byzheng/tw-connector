@@ -16,7 +16,7 @@ Get literature article for a tiddler
 	/*global $tw: false */
 	"use strict";
 	if ($tw.node) {
-        var utils = require("$:/plugins/bangyou/tw-connector/script/utils.js");
+        var utils = require("$:/plugins/bangyou/tw-connector/utils/utils.js");
     }
 	const fs = require('fs'); // Use promise-based fs API for async/await
 	const path = require('path');
@@ -79,7 +79,28 @@ Get literature article for a tiddler
 				console.log("Failed to parse HTML content", e);
 				return;
 			}
-			document = utils.getArticle(document);
+
+
+			
+			const siteConfigTiddler = $tw.wiki.getTiddler("$:/plugins/bangyou/tw-connector/config/article", "");
+
+			if (!siteConfigTiddler || !siteConfigTiddler.fields || !siteConfigTiddler.fields.text) {
+				response.writeHead(500, { "Content-Type": "text/plain" });
+				response.end("Site configuration not found");
+				console.log("Site configuration not found");				
+				return;
+			}
+			console.log(siteConfigTiddler.fields.text);
+
+			
+			const siteConfig = JSON.parse(siteConfigTiddler.fields.text);
+			if (!siteConfig) {
+				response.writeHead(500, { "Content-Type": "text/plain" });
+				response.end("Invalid site configuration");
+				console.log("Invalid site configuration");
+				return;
+			}
+			document = utils.getArticle(document, siteConfig);
 			
 			// Inject script tag before </body>
 			const hightlightScript = document.createElement('script');

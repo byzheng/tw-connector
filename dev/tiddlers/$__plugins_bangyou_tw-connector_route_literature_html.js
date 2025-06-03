@@ -88,7 +88,7 @@ Save HTML files from literature uploads
 				}
 
 				// Create filter string to find tiddler with matching DOI and tag 'bibtex-entry'
-				var filter = `[tag[bibtex-entry]] :filter[get[bibtex-doi]search:title[${doi}]]`;
+				var filter = `[tag[bibtex-entry]!has[draft.of]] :filter[get[bibtex-doi]search:title[${doi}]]`;
 
 				// Search for matching tiddlers in TiddlyWiki store
 				const tiddlerFound = $tw.wiki.filterTiddlers(filter);
