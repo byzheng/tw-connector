@@ -7,52 +7,39 @@ Crossref API
 
 \*/
 
-
 'use strict';
+const fetch = require("node-fetch"); // Required even in Node 20 under TiddlyWiki
 
 
-"use strict";
 
 function Crossref(host = "https://api.crossref.org/") {
-    const this_host = host;
+    const this_host = host.replace(/\/+$/, "");
 
-
-    // Perform a request to crossref
-    var buildCrossRefApiUrl = function (path, query = {}) {
-        const host = "https://api.crossref.org/"
-        const normalizedHost = host.replace(/\/+$/, "");
-
-        // Ensure the path starts with a single slash
+    function buildCrossRefApiUrl(path, query = {}) {
         const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-
-        // Convert query object to URL search parameters
-        const queryString = new URLSearchParams(query).toString();
-
-        // Construct the full URL
-        return `${normalizedHost}${normalizedPath}${queryString ? `?${queryString}` : ""}`;
+        const queryString = Object.keys(query)
+            .map(key => encodeURIComponent(key) + '=' + encodeURIComponent(query[key]))
+            .join('&');
+        return `${this_host}${normalizedPath}${queryString ? `?${queryString}` : ""}`;
     }
 
-    var crossrefRequest = function (url) {
-        return fetch(url)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`Crossref request failed: ${response.status} ${response.statusText}`);
-                }
-                return response.json();
-            });
-        
+    async function crossrefRequest(url) {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
     }
 
-    // Fetch first PDF attachment for an item
-    var crossrefWorks = function (doi) {
-        const path = "/works/" + doi;
-        const query = {};
-
-        const url = buildCrossRefApiUrl(path, query);
+    async function works(doi) {
+        const path = `/works/${encodeURIComponent(doi)}`;
+        const url = buildCrossRefApiUrl(path);
         return crossrefRequest(url);
     }
 
-    this.crossrefWorks = crossrefWorks;
+    return {
+        works
+    };
 }
 
 exports.Crossref = Crossref;
