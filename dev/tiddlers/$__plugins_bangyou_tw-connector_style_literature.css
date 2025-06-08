@@ -1,0 +1,59 @@
+.tw-literature-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+  margin: auto;
+}
+
+.tw-literature-item {
+  background-color: #f9f9f9;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  position: relative;
+  transition: background 0.3s;
+}
+
+.tw-literature-item:hover {
+  background-color: #eef6ff;
+}
+
+.tw-literature-title {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: #1e3a8a;
+  margin-bottom: 0.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tw-literature-title-text {
+      max-width: 90%;
+      word-break: break-word;
+    }
+
+.tw-literature-remove-btn {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.tw-literature-remove-btn:hover {
+  color: #ef4444;
+}
+
+.tw-literature-authors {
+  font-size: 0.95rem;
+  color: #374151;
+  margin-bottom: 0.1rem;
+}
+
+.tw-literature-journal {
+  font-size: 0.9rem;
+  color: #6b7280;
+}

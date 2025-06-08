@@ -17,9 +17,9 @@ Save HTML files from literature uploads
 	const formidable = require('formidable'); // For parsing multipart form data (file uploads)
 	const { JSDOM } = require("jsdom"); // For DOM parsing of HTML content
 
-	if ($tw.node) {
-        var crossref = require("$:/plugins/bangyou/tw-connector/utils/crossref.js");
-    }
+	// if ($tw.node) {
+    //     var crossref = require("$:/plugins/bangyou/tw-connector/utils/crossref.js");
+    // }
 
 	exports.method = "POST";
 	exports.platforms = ["node"];
@@ -150,34 +150,34 @@ Save HTML files from literature uploads
 					response.end("Failed to save HTML content to file");
 					console.error(`Error saving file at ${htmlContent}:`, err);
 				}
-				// Update references and citations for tiddlers
-				console.log("Updating references and citations for tiddler:", tiddlerTitle);
-				try {
-					var cf = new crossref.Crossref();
-					// Update references and citations for the tiddler
-					const cfWorks = await cf.works(doi);
-					if (cfWorks && cfWorks.message && cfWorks.message.reference && Array.isArray(cfWorks.message.reference)) {
-						// Extract all DOIs from the references
-						const referenceDois = cfWorks.message.reference
-							.map(ref => ref.DOI)
-							.filter(doi => typeof doi === "string" && doi.length > 0);
-						console.log("Reference DOIs:", referenceDois);
-						const referencedTiddlers = referenceDois
-							.map(refDoi => {
-								const filter = `[tag[bibtex-entry]!has[draft.of]] :filter[get[bibtex-doi]search:title[${refDoi}]]`;
-								return $tw.wiki.filterTiddlers(filter);
-							})
-							.flat();
+				// // Update references and citations for tiddlers
+				// console.log("Updating references and citations for tiddler:", tiddlerTitle);
+				// try {
+				// 	var cf = new crossref.Crossref();
+				// 	// Update references and citations for the tiddler
+				// 	const cfWorks = await cf.works(doi);
+				// 	if (cfWorks && cfWorks.message && cfWorks.message.reference && Array.isArray(cfWorks.message.reference)) {
+				// 		// Extract all DOIs from the references
+				// 		const referenceDois = cfWorks.message.reference
+				// 			.map(ref => ref.DOI)
+				// 			.filter(doi => typeof doi === "string" && doi.length > 0);
+				// 		console.log("Reference DOIs:", referenceDois);
+				// 		const referencedTiddlers = referenceDois
+				// 			.map(refDoi => {
+				// 				const filter = `[tag[bibtex-entry]!has[draft.of]] :filter[get[bibtex-doi]search:title[${refDoi}]]`;
+				// 				return $tw.wiki.filterTiddlers(filter);
+				// 			})
+				// 			.flat();
 
-						console.log("Referenced tiddlers found:", referencedTiddlers);
-					}
-				} catch (err) {
-					// Handle any error during reference update
-					//response.writeHead(500, { "Content-Type": "application/json" });
-					//response.end("Failed to update references and citations");
-					console.error("Error updating references and citations", err);
-					//return;
-				}
+				// 		console.log("Referenced tiddlers found:", referencedTiddlers);
+				// 	}
+				// } catch (err) {
+				// 	// Handle any error during reference update
+				// 	//response.writeHead(500, { "Content-Type": "application/json" });
+				// 	//response.end("Failed to update references and citations");
+				// 	console.error("Error updating references and citations", err);
+				// 	//return;
+				// }
 
 				// Respond success after everything completes
 				response.writeHead(200, { "Content-Type": "application/json" });
