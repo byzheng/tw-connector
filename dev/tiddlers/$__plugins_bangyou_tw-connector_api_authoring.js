@@ -13,30 +13,34 @@ Works for TiddlyWiki
 
     // use cache
 
-
+    var helper = require('$:/plugins/bangyou/tw-connector/utils/helper.js').Helper();
+    var wos = require('$:/plugins/bangyou/tw-connector/api/wos.js').WOS();
     function Authoring() {
         async function bibtex(entry) {
-            // Helper to request a page of results
-            async function wosStarterRequest({ query, page = 1, limit = 50 }) {
-                const url = buildWOSApiUrl(path_document, { q: query, page, limit });
-
-                return await wosRequest(url);
+            if (!entry) {
+                throw new Error('No entry provided for bibtex conversion');
             }
-
-            const firstPage = await wosStarterRequest({ query, page: 1, limit: 50 });
-            const worksTotal = firstPage.metadata && firstPage.metadata.total ? firstPage.metadata.total : 0;
-            const pagesTotal = Math.ceil(worksTotal / 50);
-            let allHits = firstPage.hits || [];
-
-            if (pagesTotal > 1) {
-                for (let i = 2; i <= pagesTotal; i++) {
-                    const pageResult = await wosStarterRequest({ query, page: i, limit: 50 });
-                    if (pageResult.hits) {
-                        allHits = allHits.concat(pageResult.hits);
-                    }
-                }
+            if (entry.length === 0) {
+                throw new Error('Empty entry provided for bibtex conversion');
             }
-            return allHits;
+            // Fetch the tiddler with the given title
+            const tiddler = $tw.wiki.getTiddler(entry);
+            if (!tiddler) {
+                throw new Error(`Tiddler with title "${entry}" not found`);
+            }
+            // Check if the tiddler has required fields (example: 'bibtex')
+            if (!tiddler.fields || !tiddler.fields['bibtex-doi']) {
+                throw new Error(`Tiddler "${entry}" does not contain a 'bibtex-doi' field`);
+            }
+            // Return the bibtex field
+            const dois = helper.extractDOIs(tiddler.fields['bibtex-doi']);
+            if (dois.length === 0) {
+                throw new Error(`No valid DOIs found in tiddler "${entry}"`);
+            }   
+            const doi = dois[0]; // Use the first DOI found
+            const authorWOS = await wos.authorDOI(doi);
+            return authorWOS;
+
         }
         return {
             bibtex: bibtex

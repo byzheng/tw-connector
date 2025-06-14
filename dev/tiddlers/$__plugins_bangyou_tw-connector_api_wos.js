@@ -9,10 +9,6 @@ Web of Science utility for TiddlyWiki
 
 (function (exports) {
     'use strict';
-
-    const fs = require('fs');
-    const path = require('path');
-    const zlib = require('zlib');
     const fetch = require('node-fetch');
 
     // use cache
@@ -112,8 +108,41 @@ Web of Science utility for TiddlyWiki
 
             return works;
         }
+
+        async function authorDOI(doi) {
+            if (!doi || doi.length === 0) {
+                throw new Error("Invalid DOI provided");
+            }
+            if (typeof doi !== "string") {
+                throw new Error("DOI must be a string");
+            }
+            const caches = wosCache.getCaches();
+            if (!caches || caches.length === 0) {
+                return [];
+            }
+            const result = [];
+            for (const key in caches) {
+                if (Object.prototype.hasOwnProperty.call(caches, key)) {
+                    const cache = caches[key];
+                    for (const item of cache.item) {
+                        if (item && item.identifiers && item.identifiers.doi &&
+                            item.identifiers.doi.toLowerCase() === doi.toLowerCase()) {
+                            result.push(key);
+                            break;
+                        }
+                    }
+                }
+            }
+            // Find tiddlers whose 'researcherid' field matches any key in result using a filter
+            
+            const filter = `[tag[Colleague]search:researcherid:regexp[${result.join("|")}]]`;
+            const matchingTiddlers = $tw.wiki.filterTiddlers(filter);
+            return matchingTiddlers;
+        }
+
         return {
-            works: works
+            works: works,
+            authorDOI: authorDOI
         };
 
     }

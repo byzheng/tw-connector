@@ -140,7 +140,8 @@ Caching utility for TiddlyWiki with timestamped caching
             getCacheByKey,
             addEntry,
             saveCache,
-            removeExpiredEntries
+            removeExpiredEntries,
+            getCaches: () => cache
         };
     }
     exports.cacheHelper = cacheHelper;

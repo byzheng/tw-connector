@@ -18,9 +18,7 @@ OpenAlex API utility for TiddlyWiki with timestamped caching
     // use cache
 
 
-    const cacheHelper = require('$:/plugins/bangyou/tw-connector/api/cachehelper.js');
-
-    //const openAlexCache = cacheHelper('openalex');
+    const openAlexCache = require('$:/plugins/bangyou/tw-connector/api/cachehelper.js').cacheHelper('openalex');
 
 
     function OpenAlex(host = "https://api.openalex.org/") {
