@@ -38,6 +38,7 @@ Works for TiddlyWiki
                 throw new Error(`No valid DOIs found in tiddler "${entry}"`);
             }   
             const doi = dois[0]; // Use the first DOI found
+            // get author from WOS
             const authorWOS = await wos.authorDOI(doi);
             return authorWOS;
 

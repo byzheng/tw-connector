@@ -129,7 +129,7 @@ Caching utility for TiddlyWiki with timestamped caching
             }, delay);
         }
 
-        async function getCacheByKey(key) {
+        function getCacheByKey(key) {
             if (cache.hasOwnProperty(key)) {
                 return cache[key];
             }
