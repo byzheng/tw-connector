@@ -21,7 +21,7 @@ Caching utility for TiddlyWiki with timestamped caching
     const CACHE_EXPIRATION_MS = CACHE_EXPIRATION_DAYS * 24 * 60 * 60 * 1000; // Expiration duration in milliseconds
     const MIN_SAVE_INTERVAL_MS = 10000; // Minimum interval between saves in milliseconds
 
-
+    let cache = {};
     function cacheHelper(cacheName) {
 
         const wikiTiddlersPath = $tw.boot.wikiTiddlersPath;
@@ -52,7 +52,7 @@ Caching utility for TiddlyWiki with timestamped caching
         }
 
         const CACHE_FILE = resolvedCacheFile;
-        let cache = {};
+        
         if (fs.existsSync(CACHE_FILE)) {
             try {
                 const compressed = fs.readFileSync(CACHE_FILE);
