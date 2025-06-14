@@ -10,7 +10,6 @@ Caching utility for TiddlyWiki with timestamped caching
 (function (exports) {
     'use strict';
 
-    const { dir } = require('console');
     const fs = require('fs');
     const path = require('path');
     const zlib = require('zlib');
@@ -21,8 +20,9 @@ Caching utility for TiddlyWiki with timestamped caching
     const CACHE_EXPIRATION_MS = CACHE_EXPIRATION_DAYS * 24 * 60 * 60 * 1000; // Expiration duration in milliseconds
     const MIN_SAVE_INTERVAL_MS = 10000; // Minimum interval between saves in milliseconds
 
-    let cache = {};
+    
     function cacheHelper(cacheName, limit = MAX_CACHE_ITEMS) {
+        let cache = {};
         const this_limit = Math.max(2, limit || MAX_CACHE_ITEMS);
         const wikiTiddlersPath = $tw.boot.wikiTiddlersPath;
 

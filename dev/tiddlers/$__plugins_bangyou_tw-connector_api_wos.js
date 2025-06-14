@@ -107,7 +107,7 @@ Web of Science utility for TiddlyWiki
             const match = input.match(/(?:\/record\/|\/author\/record\/)([A-Z]-\d{4}-\d{4})/i);
             return match ? match[1] : input;
         }
-        async function works(researcherid) {
+        async function cacheWorks(researcherid) {
     
             researcherid = decodeURIComponent(researcherid);
             if (!researcherid || researcherid.length === 0) {
@@ -127,7 +127,7 @@ Web of Science utility for TiddlyWiki
             return works;
         }
 
-        function authorDOI(doi) {
+        function getAuthorByDOI(doi) {
             if (!doi || doi.length === 0) {
                 throw new Error("Invalid DOI provided");
             }
@@ -145,7 +145,6 @@ Web of Science utility for TiddlyWiki
                 }
                 if (Object.prototype.hasOwnProperty.call(caches, key)) {
                     const cache = caches[key];
-                    console.log(cache)
                     for (const item of cache.item) {
                         if (item && item.identifiers && item.identifiers.doi &&
                             item.identifiers.doi.toLowerCase() === doi.toLowerCase()) {
@@ -163,8 +162,8 @@ Web of Science utility for TiddlyWiki
         }
 
         return {
-            works: works,
-            authorDOI: authorDOI,
+            cacheWorks: cacheWorks,
+            getAuthorByDOI: getAuthorByDOI,
             getPlatformField: function () {
                 return platform_field;
             }

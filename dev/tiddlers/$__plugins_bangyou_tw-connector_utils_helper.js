@@ -11,7 +11,6 @@ Helper functions
 
 (function (exports) {
     'use strict';
-    const fetch = require('node-fetch');
 
     // use cache
 

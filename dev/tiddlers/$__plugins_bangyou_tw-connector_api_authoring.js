@@ -15,9 +15,7 @@ Works for TiddlyWiki
     var helper = require('$:/plugins/bangyou/tw-connector/utils/helper.js').Helper();
     var platforms = [
         require('$:/plugins/bangyou/tw-connector/api/wos.js').WOS(),
-        // Add other platforms here, e.g.:
-        // require('$:/plugins/bangyou/tw-connector/api/scopus.js').Scopus(),
-        // require('$:/plugins/bangyou/tw-connector/api/google-scholar.js').GoogleScholar()
+        require('$:/plugins/bangyou/tw-connector/api/homepage.js').Homepage()
     ];
     function Authoring() {
         
@@ -35,14 +33,16 @@ Works for TiddlyWiki
                     if (!platformField || !tiddler.fields[platformField]) {
                         continue; // Skip if the platform field is not defined or empty
                     }
-                    const id = tiddler.fields[platformField];
-                    if (!id || id === "") {
-                        continue; // Skip if the researcher ID is not defined or empty
-                    }
-                    try {
-                        await platform.works(id);
-                    } catch (error) {
-                        console.error(`Error updating cache for ${platform.constructor.name} with researcher ID ${id}:`, error);
+                    const ids = $tw.utils.parseStringArray(tiddler.fields[platformField]);
+                    for (const id of ids) {
+                        if (!id || id === "") {
+                            continue; // Skip if the researcher ID is not defined or empty
+                        }
+                        try {
+                            await platform.cacheWorks(id);
+                        } catch (error) {
+                            console.error(`Error updating cache for ${platform.constructor.name} with ID ${id}:`, error);
+                        }
                     }
                 }
             }
@@ -82,7 +82,7 @@ Works for TiddlyWiki
             let authors = [];
             for (const platform of platforms) {
                 try {
-                    const author_platform = platform.authorDOI(doi);
+                    const author_platform = platform.getAuthorByDOI(doi);
                     if (author_platform) {
                         authors.push(author_platform);
                     }

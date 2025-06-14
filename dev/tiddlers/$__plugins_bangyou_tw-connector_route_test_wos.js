@@ -29,7 +29,7 @@ Get reference list for a tiddler
 				console.log("Invalid researcherid provided");
 				return;
 			}
-			wos.works(researcherid).then((data) => {
+			wos.cacheWorks(researcherid).then((data) => {
 				response.writeHead(200, { "Content-Type": "application/json" });
 				response.end(JSON.stringify(data));
 			}).catch((err) => {
