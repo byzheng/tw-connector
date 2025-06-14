@@ -139,8 +139,12 @@ Web of Science utility for TiddlyWiki
             }
             const result = [];
             for (const key in caches) {
+                if (key === wos_daily_request_count_key) {
+                    continue; // Skip the daily request count cache
+                }
                 if (Object.prototype.hasOwnProperty.call(caches, key)) {
                     const cache = caches[key];
+                    console.log(cache)
                     for (const item of cache.item) {
                         if (item && item.identifiers && item.identifiers.doi &&
                             item.identifiers.doi.toLowerCase() === doi.toLowerCase()) {

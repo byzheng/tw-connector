@@ -13,7 +13,12 @@ Works for TiddlyWiki
     // use cache
 
     var helper = require('$:/plugins/bangyou/tw-connector/utils/helper.js').Helper();
-    var wos = require('$:/plugins/bangyou/tw-connector/api/wos.js').WOS();
+    var platforms = [
+        require('$:/plugins/bangyou/tw-connector/api/wos.js').WOS(),
+        // Add other platforms here, e.g.:
+        // require('$:/plugins/bangyou/tw-connector/api/scopus.js').Scopus(),
+        // require('$:/plugins/bangyou/tw-connector/api/google-scholar.js').GoogleScholar()
+    ];
     function Authoring() {
         
         // get author for a tiddler entry
@@ -23,7 +28,7 @@ Works for TiddlyWiki
          * @returns {Promise<string>} - A promise that resolves to the author information.
          * @throws {Error} - Throws an error if the entry is not provided, is empty, or if the tiddler does not exist or lacks required fields.
          */
-        function bibtex(entry) {
+        async function bibtex(entry) {
             if (!entry) {
                 throw new Error('No entry provided for bibtex conversion');
             }
@@ -45,9 +50,20 @@ Works for TiddlyWiki
                 throw new Error(`No valid DOIs found in tiddler "${entry}"`);
             }   
             const doi = dois[0]; // Use the first DOI found
-            // get author from WOS
-            const authorWOS = wos.authorDOI(doi);
-            return authorWOS;
+            // get author from all platforms
+            let authors = [];
+            for (const platform of platforms) {
+                try {
+                    const author_platform = platform.authorDOI(doi);
+                    if (author_platform) {
+                        authors.push(author_platform);
+                    }
+                } catch (error) {
+                    console.error(`Error fetching author from ${platform.constructor.name}:`, error);
+                }
+            }
+            authors = [...new Set(authors.flat())];
+            return authors;
 
         }
         return {
