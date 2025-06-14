@@ -9,14 +9,21 @@ Works for TiddlyWiki
 
 (function (exports) {
     'use strict';
-    const fetch = require('node-fetch');
 
     // use cache
 
     var helper = require('$:/plugins/bangyou/tw-connector/utils/helper.js').Helper();
     var wos = require('$:/plugins/bangyou/tw-connector/api/wos.js').WOS();
     function Authoring() {
-        async function bibtex(entry) {
+        
+        // get author for a tiddler entry
+        /**
+         * Fetches the author information for a given tiddler entry in TiddlyWiki.
+         * @param {string} entry - The title of the tiddler to fetch author information from.
+         * @returns {Promise<string>} - A promise that resolves to the author information.
+         * @throws {Error} - Throws an error if the entry is not provided, is empty, or if the tiddler does not exist or lacks required fields.
+         */
+        function bibtex(entry) {
             if (!entry) {
                 throw new Error('No entry provided for bibtex conversion');
             }
@@ -39,7 +46,7 @@ Works for TiddlyWiki
             }   
             const doi = dois[0]; // Use the first DOI found
             // get author from WOS
-            const authorWOS = await wos.authorDOI(doi);
+            const authorWOS = wos.authorDOI(doi);
             return authorWOS;
 
         }

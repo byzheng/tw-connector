@@ -15,10 +15,9 @@ Web of Science utility for TiddlyWiki
 
 
     const wosCache = require('$:/plugins/bangyou/tw-connector/api/cachehelper.js').cacheHelper("wos");
-
-    //const wosCache = cacheHelper('wos');
-
-
+    const wos_daily_limit = 5000; // Daily request limit for WOS API
+    const wos_daily_request_count_key = "__wos_daily_request_count";
+    
 
     function WOS(host = "https://api.clarivate.com") {
         const this_host = host.replace(/\/+$/, "");
@@ -37,7 +36,21 @@ Web of Science utility for TiddlyWiki
                 .join('&');
             return `${this_host}${normalizedPath}${queryString ? `?${queryString}` : ""}`;
         }
+        function getDailyRequestCount() {
+            const today = new Date().toISOString().slice(0, 10);
+            let countObj = wosCache.getCacheByKey(wos_daily_request_count_key);
+            if (!countObj || !countObj.item || countObj.item.day !== today) {
+                countObj = { count: 0, day: today };
+                wosCache.addEntry(wos_daily_request_count_key, countObj, undefined, false);
+                return (0)
+            }
+            return typeof countObj.item.count === "number" ? countObj.item.count : 0;
+        }
         async function wosRequest(url) {
+            const currentCount = getDailyRequestCount();
+            if (currentCount >= wos_daily_limit) {
+                throw new Error(`Daily request limit of ${wos_daily_limit} for Web of Science API has been reached.`);
+            }
             const apiKey = getWOSApiKey();
             if (!apiKey || apiKey === "") {
                 throw new Error("Web of Science API key is not configured. Please set it in $:/config/tw-connector/api/wos tiddler.");
@@ -46,6 +59,10 @@ Web of Science utility for TiddlyWiki
                 "X-ApiKey": apiKey
             };
             const response = await fetch(url, { headers });
+            const today = new Date().toISOString().slice(0, 10);
+            const countObj = { count: currentCount + 1, day: today };
+            console.log(`Web of Science API request count for today (${today}): ${countObj.count}`);
+            wosCache.addEntry(wos_daily_request_count_key, countObj, undefined, false);
             // Simulate a delay to avoid hitting rate limits too quickly
             await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
             if (!response.ok) {
@@ -99,7 +116,7 @@ Web of Science utility for TiddlyWiki
             if (!researcherid || researcherid.length === 0) {
                 throw new Error(`Tiddler ${colleague} has no valid researcherid field for web of science`);
             }
-            const cacheResult = await wosCache.getCacheByKey(researcherid);
+            const cacheResult = wosCache.getCacheByKey(researcherid);
             if (cacheResult) {
                 return cacheResult.item;
             }
@@ -109,7 +126,7 @@ Web of Science utility for TiddlyWiki
             return works;
         }
 
-        async function authorDOI(doi) {
+        function authorDOI(doi) {
             if (!doi || doi.length === 0) {
                 throw new Error("Invalid DOI provided");
             }

@@ -92,7 +92,7 @@ OpenAlex API utility for TiddlyWiki with timestamped caching
 
                 for (const result of data.results || []) {
                     const openalexId = result.id;
-                    openAlexCache.addEntry([openalexId, result.doi], result, forceSave = false);
+                    openAlexCache.addEntry([openalexId, result.doi], result, undefined, false);
                 }
                 openAlexCache.saveCache();
                 if (data.results) {
@@ -149,7 +149,7 @@ OpenAlex API utility for TiddlyWiki with timestamped caching
                     const data = await response.json();
                     for (const result of data.results || []) {
                         const openalexId = result.id;
-                        openAlexCache.addEntry([openalexId, result.doi], result, forceSave = false);
+                        openAlexCache.addEntry([openalexId, result.doi], result, undefined, false);
                     }
                     openAlexCache.saveCache();
                     if (data.results) {
