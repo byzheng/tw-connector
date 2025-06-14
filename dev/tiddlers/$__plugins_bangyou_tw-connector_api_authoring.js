@@ -21,6 +21,32 @@ Works for TiddlyWiki
     ];
     function Authoring() {
         
+        async function updateCache() {
+            const filter = "[tag[Colleague]!has[draft.of]]";
+            const tiddlers = $tw.wiki.filterTiddlers(filter);
+            for (const tiddlerTitle of tiddlers) {
+                const tiddler = $tw.wiki.getTiddler(tiddlerTitle);
+                if (!(tiddler && tiddler.fields))) {
+                    continue;
+                }
+                for (const platform of platforms) {
+                    const platformField = platform.getPlatformField();
+                    if (!platformField || !tiddler.fields[platformField]) {
+                        continue; // Skip if the platform field is not defined or empty
+                    }
+                    const id = tiddler.fields[platformField];
+                    if (!id || id === "") {
+                        continue; // Skip if the researcher ID is not defined or empty
+                    }
+                    try {
+                        await platform.works(id);
+                    } catch (error) {
+                        console.error(`Error updating cache for ${platform.constructor.name} with researcher ID ${id}:`, error);
+                    }
+                }
+            }
+        }
+
         // get author for a tiddler entry
         /**
          * Fetches the author information for a given tiddler entry in TiddlyWiki.

@@ -14,10 +14,11 @@ Web of Science utility for TiddlyWiki
     // use cache
 
 
-    const wosCache = require('$:/plugins/bangyou/tw-connector/api/cachehelper.js').cacheHelper("wos");
+    const wosCache = require('$:/plugins/bangyou/tw-connector/api/cachehelper.js').cacheHelper("wos", 9999999);
     const wos_daily_limit = 5000; // Daily request limit for WOS API
     const wos_daily_request_count_key = "__wos_daily_request_count";
     
+    const platform_field = "researcherid"; // Field in tiddler that contains the WOS researcher ID
 
     function WOS(host = "https://api.clarivate.com") {
         const this_host = host.replace(/\/+$/, "");
@@ -163,7 +164,10 @@ Web of Science utility for TiddlyWiki
 
         return {
             works: works,
-            authorDOI: authorDOI
+            authorDOI: authorDOI,
+            getPlatformField: function () {
+                return platform_field;
+            }
         };
 
     }

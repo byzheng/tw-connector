@@ -22,8 +22,8 @@ Caching utility for TiddlyWiki with timestamped caching
     const MIN_SAVE_INTERVAL_MS = 10000; // Minimum interval between saves in milliseconds
 
     let cache = {};
-    function cacheHelper(cacheName) {
-
+    function cacheHelper(cacheName, limit = MAX_CACHE_ITEMS) {
+        const this_limit = Math.max(2, limit || MAX_CACHE_ITEMS);
         const wikiTiddlersPath = $tw.boot.wikiTiddlersPath;
 
         // Validate cacheName: only allow alphanumeric characters, underscores, and dashes
@@ -82,7 +82,7 @@ Caching utility for TiddlyWiki with timestamped caching
             }
         }
         function removeExpiredEntries() {
-            if (Object.keys(cache).length < MAX_CACHE_ITEMS) return;
+            if (Object.keys(cache).length < this_limit) return;
             const now = Date.now();
             // Remove entries older than the expiration threshold
             const expirationThreshold = now - CACHE_EXPIRATION_MS;
@@ -90,17 +90,17 @@ Caching utility for TiddlyWiki with timestamped caching
                 if (cache[key].timestamp < expirationThreshold) {
                     delete cache[key];
                 }
-                if (Object.keys(cache).length < MAX_CACHE_ITEMS) {
+                if (Object.keys(cache).length < this_limit) {
                     return; // Stop if we have removed enough entries
                 }
             }
 
-            // Limit cache size to MAX_CACHE_ITEMS
+            // Limit cache size to this_limit
             const cacheKeys = Object.keys(cache);
-            if (cacheKeys.length > MAX_CACHE_ITEMS) {
+            if (cacheKeys.length > this_limit) {
                 // Sort keys by timestamp ascending
                 cacheKeys.sort((a, b) => cache[a].timestamp - cache[b].timestamp);
-                const keysToRemove = cacheKeys.slice(0, cacheKeys.length - MAX_CACHE_ITEMS);
+                const keysToRemove = cacheKeys.slice(0, cacheKeys.length - this_limit);
                 for (const key of keysToRemove) {
                     delete cache[key];
                 }
