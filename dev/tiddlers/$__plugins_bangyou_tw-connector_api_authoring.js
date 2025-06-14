@@ -21,14 +21,15 @@ Works for TiddlyWiki
     ];
     function Authoring() {
         
-        async function updateCache() {
+        async function cacheUpdate() {
             const filter = "[tag[Colleague]!has[draft.of]]";
             const tiddlers = $tw.wiki.filterTiddlers(filter);
             for (const tiddlerTitle of tiddlers) {
                 const tiddler = $tw.wiki.getTiddler(tiddlerTitle);
-                if (!(tiddler && tiddler.fields))) {
+                if (!(tiddler && tiddler.fields)) {
                     continue;
                 }
+                // Check if the tiddler has a 'platform id' field or equivalent for each platform
                 for (const platform of platforms) {
                     const platformField = platform.getPlatformField();
                     if (!platformField || !tiddler.fields[platformField]) {
@@ -45,6 +46,7 @@ Works for TiddlyWiki
                     }
                 }
             }
+            return true; // Indicate that the cache update was successful
         }
 
         // get author for a tiddler entry
@@ -93,7 +95,8 @@ Works for TiddlyWiki
 
         }
         return {
-            bibtex: bibtex
+            bibtex: bibtex,
+            cacheUpdate: cacheUpdate
         };
 
     }
