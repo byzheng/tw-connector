@@ -15,7 +15,6 @@ Web of Science utility for TiddlyWiki
 
 
     const wosCache = require('$:/plugins/bangyou/tw-connector/api/cachehelper.js').cacheHelper("wos", 9999999);
-    const wos_daily_limit = 5000; // Daily request limit for WOS API
     const wos_daily_request_count_key = "__wos_daily_request_count";
     
     const platform_field = "researcherid"; // Field in tiddler that contains the WOS researcher ID
@@ -23,10 +22,27 @@ Web of Science utility for TiddlyWiki
     function WOS(host = "https://api.clarivate.com") {
         const this_host = host.replace(/\/+$/, "");
         const path_document = "/apis/wos-starter/v1/documents"
+
+        function isEnabled() {
+            let tiddler = $tw.wiki.getTiddler("$:/config/tw-connector/authoring/wos/enable");
+            if (!tiddler) {
+                return true; // default to enabled ("yes")
+            }
+            return tiddler && tiddler.fields.text === "yes";
+        }
+        function getWOSDailyLimit() {
+            // In TiddlyWiki, global $tw object provides access to tiddlers
+            if (typeof $tw !== "undefined" && $tw.wiki) {
+                const limitText = $tw.wiki.getTiddlerText("$:/config/tw-connector/authoring/wos/daily-limit", "").trim();
+                const limit = parseInt(limitText, 10);
+                return isNaN(limit) ? 5000 : limit;
+            }
+            return 5000;
+        }
         function getWOSApiKey() {
             // In TiddlyWiki, global $tw object provides access to tiddlers
             if (typeof $tw !== "undefined" && $tw.wiki) {
-                return $tw.wiki.getTiddlerText("$:/config/tw-connector/api/wos", "").trim();
+                return $tw.wiki.getTiddlerText("$:/config/tw-connector/authoring/wos/api", "").trim();
             }
             return "";
         }
@@ -49,6 +65,7 @@ Web of Science utility for TiddlyWiki
         }
         async function wosRequest(url) {
             const currentCount = getDailyRequestCount();
+            const wos_daily_limit = getWOSDailyLimit();
             if (currentCount >= wos_daily_limit) {
                 throw new Error(`Daily request limit of ${wos_daily_limit} for Web of Science API has been reached.`);
             }
@@ -108,7 +125,9 @@ Web of Science utility for TiddlyWiki
             return match ? match[1] : input;
         }
         async function cacheWorks(researcherid) {
-    
+            if (!isEnabled()) {
+                return;
+            }
             researcherid = decodeURIComponent(researcherid);
             if (!researcherid || researcherid.length === 0) {
                 throw new Error("Invalid researcherid provided");
@@ -128,6 +147,9 @@ Web of Science utility for TiddlyWiki
         }
 
         function getAuthorByDOI(doi) {
+            if (!isEnabled()) {
+                return [];
+            }
             if (!doi || doi.length === 0) {
                 throw new Error("Invalid DOI provided");
             }
@@ -162,6 +184,7 @@ Web of Science utility for TiddlyWiki
         }
 
         return {
+            isEnabled: isEnabled,
             cacheWorks: cacheWorks,
             getAuthorByDOI: getAuthorByDOI,
             getPlatformField: function () {

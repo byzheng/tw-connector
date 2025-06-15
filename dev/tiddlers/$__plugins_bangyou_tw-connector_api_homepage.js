@@ -19,8 +19,17 @@ Authoring publication from homepage. Assume all dois in the homepage are publish
 
     function Homepage() {
 
-
+        function isEnabled() {
+            let tiddler = $tw.wiki.getTiddler("$:/config/tw-connector/authoring/homepage/enable");
+            if (!tiddler) {
+                return true; // default to enabled ("yes")
+            }
+            return tiddler && tiddler.fields.text === "yes";
+        }
         async function cacheWorks(url) {
+            if (!isEnabled()) {
+                return;
+            }
             if (!url || typeof url !== "string") {
                 throw new Error("Invalid URL provided");
             }
@@ -47,6 +56,9 @@ Authoring publication from homepage. Assume all dois in the homepage are publish
         }
 
         function getAuthorByDOI(doi) {
+            if (!isEnabled()) {
+                return [];
+            }
             if (!doi || doi.length === 0) {
                 throw new Error("Invalid DOI provided");
             }
@@ -80,6 +92,7 @@ Authoring publication from homepage. Assume all dois in the homepage are publish
         }
 
         return {
+            isEnabled: isEnabled,
             cacheWorks: cacheWorks,
             getAuthorByDOI: getAuthorByDOI,
             getPlatformField: function () {
