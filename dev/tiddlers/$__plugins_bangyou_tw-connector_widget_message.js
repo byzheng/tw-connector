@@ -191,8 +191,8 @@ message widget
     }
 
     FilenameWidget.prototype.refresh = function (changedTiddlers) {
-        this.refreshSelf();
-        return true;
+        //this.refreshSelf();
+        return false;
     };
 
     exports.imagefilepath = FilenameWidget;

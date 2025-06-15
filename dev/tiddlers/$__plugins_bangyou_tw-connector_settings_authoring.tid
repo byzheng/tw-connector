@@ -1,0 +1,58 @@
+caption: Authoring
+created: 20250615013742838
+modified: 20250615014811466
+tags: $:/tags/ControlPanel/Settings/TW-Connector
+title: $:/plugins/bangyou/tw-connector/settings/authoring
+type: text/vnd.tiddlywiki
+
+
+The tiddlers with tag `Colleague` is used to filter authors for publication. 
+
+
+----
+
+
+<$link to="$:/config/tw-connector/authoring/expired-days">Expired Days Author's Publication</$link> 
+
+<$edit-text tiddler="$:/config/tw-connector/authoring/expired-days" default="30" tag="input" />
+
+
+The author's publication will be retrieved after expired days.
+
+----
+
+!! Homepage
+
+The field `url` in the tiddlers with tag `Colleague` is used to to retrieve author's publications. All DOIs in the homepage is assumed as author's publications.
+
+
+----
+<$link to="$:/config/tw-connector/authoring/homepage/enable">Retrieve Publication from Homepage</$link> 
+
+<$checkbox tiddler="$:/config/tw-connector/authoring/homepage/enable" field="text" checked="enable" unchecked="disable" default="enable"><$link to="$:/config/tw-connector/authoring/homepage/enable">Enable Homepage</$link></$checkbox>
+
+
+----
+!! Web of Science
+
+The field `researcherid` in the tiddlers with tag `Colleague` is used to to retrieve author's publications. 
+
+----
+<$link to="$:/config/tw-connector/authoring/wos/enable">Retrieve Publication from Web of Science</$link> 
+
+<$checkbox tiddler="$:/config/tw-connector/authoring/wos/enable" field="text" checked="enable" unchecked="disable" default="enable"><$link to="$:/config/tw-connector/authoring/wos/enable">Enable Web of Science</$link></$checkbox>
+
+----
+
+<$link to="$:/config/tw-connector/authoring/wos/api">API Key for Web of Science</$link> 
+
+<$edit-text tiddler="$:/config/tw-connector/authoring/wos/api" default="" tag="input" />
+
+----
+
+
+<$link to="$:/config/tw-connector/authoring/wos/daily-limit">Daily Limit of API Requests</$link> 
+
+<$edit-text tiddler="$:/config/tw-connector/authoring/wos/daily-limit" default="5000" tag="input" />
+
+----
