@@ -14,6 +14,7 @@ message widget
     var MessageWidget = function (parseTreeNode, options) {
         this.initialise(parseTreeNode, options);
     };
+    var authoring = require("$:/plugins/bangyou/tw-connector/api/authoring.js").Authoring();
 
     /*
     Inherit from the base widget class
@@ -156,12 +157,19 @@ message widget
         if (!Array.isArray(new_tiddler) || new_tiddler.length === 0) {
             return;
         }
+        let tags = ["bibtex-entry"];
         new_tiddler = new_tiddler[0];
-        new_tiddler["tags"] = ["bibtex-entry"];
+        
         new_tiddler["created"] = $tw.utils.formatDateString(new Date(), "[UTC]YYYY0MM0DD0hh0mm0ss0XXX");
         new_tiddler["modified"] = new_tiddler["created"];
         new_tiddler["bibtex-zotero-pdf-key"] = request.pdf_key;
 
+        // add authoring information
+        if (new_tiddler.fields["bibtex-doi"] !== undefined) {
+            const authors = authoring.getAuthorByDOI(new_tiddler.fields["bibtex-doi"]);
+            tags = tags.concat(authors);
+        }
+        new_tiddler["tags"] = tags;
         $tw.wiki.addTiddler(new $tw.Tiddler(new_tiddler));		
         this.the_story.addToStory(title, "", {
             openLinkFromInsideRiver: this.openLinkFromInsideRiver,

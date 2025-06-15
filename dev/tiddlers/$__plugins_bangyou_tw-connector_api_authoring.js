@@ -72,11 +72,21 @@ Works for TiddlyWiki
             if (!tiddler.fields || !tiddler.fields['bibtex-doi']) {
                 throw new Error(`Tiddler "${entry}" does not contain a 'bibtex-doi' field`);
             }
-            // Return the bibtex field
-            const dois = helper.extractDOIs(tiddler.fields['bibtex-doi']);
+            const authors = await getAuthorByDOI(tiddler.fields['bibtex-doi']);
+            return authors;
+        }
+
+        async function getAuthorByDOI(str) {
+            if (!str) {
+                throw new Error('No DOI provided for author retrieval');
+            }
+            if (typeof str !== 'string') {
+                throw new Error('Invalid DOI format');
+            }
+            const dois = helper.extractDOIs(str);
             if (dois.length === 0) {
-                throw new Error(`No valid DOIs found in tiddler "${entry}"`);
-            }   
+                throw new Error('No valid DOIs found in the provided string');
+            }
             const doi = dois[0]; // Use the first DOI found
             // get author from all platforms
             let authors = [];
@@ -92,11 +102,12 @@ Works for TiddlyWiki
             }
             authors = [...new Set(authors.flat())];
             return authors;
-
         }
+
         return {
             bibtex: bibtex,
-            cacheUpdate: cacheUpdate
+            cacheUpdate: cacheUpdate,
+            getAuthorByDOI: getAuthorByDOI
         };
 
     }
