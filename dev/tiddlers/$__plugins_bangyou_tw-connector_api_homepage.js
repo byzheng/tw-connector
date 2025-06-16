@@ -8,6 +8,9 @@ Authoring publication from homepage. Assume all dois in the homepage are publish
 
 (function (exports) {
     'use strict';
+    if (!$tw.node) {
+        return;
+    }
     const fetch = require('node-fetch');
 
     // use cache

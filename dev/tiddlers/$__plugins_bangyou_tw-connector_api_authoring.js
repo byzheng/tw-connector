@@ -9,7 +9,9 @@ Works for TiddlyWiki
 
 (function (exports) {
     'use strict';
-
+    if (!$tw.node) {
+        return;
+    }
     // use cache
 
     var helper = require('$:/plugins/bangyou/tw-connector/utils/helper.js').Helper();
@@ -56,7 +58,7 @@ Works for TiddlyWiki
          * @returns {Promise<string>} - A promise that resolves to the author information.
          * @throws {Error} - Throws an error if the entry is not provided, is empty, or if the tiddler does not exist or lacks required fields.
          */
-        async function bibtex(entry) {
+        function bibtex(entry) {
             if (!entry) {
                 throw new Error('No entry provided for bibtex conversion');
             }
@@ -72,11 +74,11 @@ Works for TiddlyWiki
             if (!tiddler.fields || !tiddler.fields['bibtex-doi']) {
                 throw new Error(`Tiddler "${entry}" does not contain a 'bibtex-doi' field`);
             }
-            const authors = await getAuthorByDOI(tiddler.fields['bibtex-doi']);
+            const authors = getAuthorByDOI(tiddler.fields['bibtex-doi']);
             return authors;
         }
 
-        async function getAuthorByDOI(str) {
+        function getAuthorByDOI(str) {
             if (!str) {
                 throw new Error('No DOI provided for author retrieval');
             }

@@ -9,7 +9,9 @@ OpenAlex API utility for TiddlyWiki with timestamped caching
 
 (function (exports) {
     'use strict';
-
+    if (!$tw.node) {
+        return;
+    }
     const fs = require('fs');
     const path = require('path');
     const zlib = require('zlib');

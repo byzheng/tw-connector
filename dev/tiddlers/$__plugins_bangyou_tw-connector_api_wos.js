@@ -9,11 +9,11 @@ Web of Science utility for TiddlyWiki
 
 (function (exports) {
     'use strict';
+    if (!$tw.node) {
+        return;
+    }
     const fetch = require('node-fetch');
-
-    // use cache
-
-
+    
     const wosCache = require('$:/plugins/bangyou/tw-connector/api/cachehelper.js').cacheHelper("wos", 9999999);
     const wos_daily_request_count_key = "__wos_daily_request_count";
     
