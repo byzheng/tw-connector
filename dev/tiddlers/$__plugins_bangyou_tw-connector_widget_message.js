@@ -37,7 +37,7 @@ message widget
 
         var openLinkFromOutsideRiver = $tw.wiki.getTiddler("$:/config/Navigation/openLinkFromOutsideRiver").fields.text;
         var openLinkFromInsideRiver = $tw.wiki.getTiddler("$:/config/Navigation/openLinkFromInsideRiver").fields.text;
-        
+
         var the_story = new $tw.Story({ wiki: $tw.wiki });
         // Make the_story accessible to helper functions
         this.the_story = the_story;
@@ -126,55 +126,39 @@ message widget
 
     };
 
-    
-    MessageWidget.prototype.addBibtexEntry = function(request) {
+
+    MessageWidget.prototype.addBibtexEntry = function (request) {
         const bibtex = request.bibtex;
-        const title = request.title;
         if (bibtex === undefined) {
             return;
         }
-        if (title === undefined || Array.isArray(title)) {
-            return;
-        }
-        
-        
 
-        // Check if the tiddler already exists
-        if (!$tw.wiki.tiddlerExists("$:/plugins/tiddlywiki/bibtex")) {
-            return;
-        }
-        // Check if the tiddler already exists
-        if ($tw.wiki.tiddlerExists(title)) {
-            return;
-        }
+        fetch("/literature", {
+            method: "POST",
+            headers: {
+                "Content-Type": "text/plain",
+                "X-Requested-With": "TiddlyWiki"
+            },
+            body: bibtex  // Send the base64-encoded image data without the prefix
+        }).then(response => {
+            if (!response.ok) {
+                console.error("Upload failed:", response.statusText);
+            }
+            return response.json();
+        }).then(newTiddlers => {
+            $tw.syncer.syncFromServer();
+            for (let newTiddler of newTiddlers.tiddlers) {
+                const title = newTiddler.title;
+                this.the_story.addToStory(title, "", {
+                    openLinkFromInsideRiver: this.openLinkFromInsideRiver,
+                    openLinkFromOutsideRiver: this.openLinkFromOutsideRiver
+                });
+                this.the_story.addToHistory(title);
+            }
+        }).catch(error => {
+                console.error("Error add new tidd:", error);
+            });
 
-        let new_tiddler = $tw.wiki.deserializeTiddlers(null,
-            bibtex,
-            {title: title},
-            {deserializer: "application/x-bibtex"}
-        );
-
-        if (!Array.isArray(new_tiddler) || new_tiddler.length === 0) {
-            return;
-        }
-        let tags = ["bibtex-entry"];
-        new_tiddler = new_tiddler[0];
-        
-        new_tiddler["created"] = $tw.utils.formatDateString(new Date(), "[UTC]YYYY0MM0DD0hh0mm0ss0XXX");
-        new_tiddler["modified"] = new_tiddler["created"];
-        new_tiddler["bibtex-zotero-pdf-key"] = request.pdf_key;
-        console.log(new_tiddler)        // add authoring information
-        // if (new_tiddler.fields["bibtex-doi"] !== undefined) {
-        //     const authors = authoring.getAuthorByDOI(new_tiddler.fields["bibtex-doi"]);
-        //     tags = tags.concat(authors);
-        // }
-        new_tiddler["tags"] = tags;
-        $tw.wiki.addTiddler(new $tw.Tiddler(new_tiddler));		
-        this.the_story.addToStory(title, "", {
-            openLinkFromInsideRiver: this.openLinkFromInsideRiver,
-            openLinkFromOutsideRiver: this.openLinkFromOutsideRiver
-        });
-        this.the_story.addToHistory(title);
         return;
     };
 
