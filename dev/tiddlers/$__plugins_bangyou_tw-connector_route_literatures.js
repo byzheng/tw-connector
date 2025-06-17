@@ -16,7 +16,7 @@ Create a new tiddler with the bibtex entry
 
 	exports.method = "POST";
 	exports.platforms = ["node"];
-	exports.path = /^\/literature$/; // Endpoint path regex
+	exports.path = /^\/literatures$/; // Endpoint path regex
 
 	exports.handler = function (request, response, state) {
 

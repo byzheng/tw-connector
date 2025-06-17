@@ -1,5 +1,5 @@
 /*\
-title: $:/plugins/bangyou/tw-connector/route/literature/html.js
+title: $:/plugins/bangyou/tw-connector/route/literature/upload-html.js
 type: application/javascript
 module-type: route
 
@@ -23,7 +23,7 @@ Save HTML files from literature uploads
 
 	exports.method = "POST";
 	exports.platforms = ["node"];
-	exports.path = /^\/literature\/html$/; // Endpoint path regex
+	exports.path = /^\/literature\/upload-html$/; // Endpoint path regex
 	exports.bodyFormat = "stream"; // Incoming request body format
 
 	exports.handler = function (request, response, state) {
