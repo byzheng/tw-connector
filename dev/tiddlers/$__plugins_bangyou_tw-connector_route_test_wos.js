@@ -13,23 +13,23 @@ Get reference list for a tiddler
 	/*jslint node: true, browser: true */
 	/*global $tw: false */
 	"use strict";
-	var wos = require("$:/plugins/bangyou/tw-connector/api/wos.js").WOS();
+	var platform = require("$:/plugins/bangyou/tw-connector/api/orcid.js").ORCID();
 
 	exports.method = "GET";
 	exports.platforms = ["node"];
-	exports.path = /^\/test\/wos\/(.+)$/;
+	exports.path = /^\/test\/orcid\/(.+)$/;
 
 	exports.handler = function (request, response, state) {
 
 		try {
-			const researcherid = decodeURIComponent(state.params[0]);
-			if (!researcherid || researcherid.length === 0) {
+			const id = decodeURIComponent(state.params[0]);
+			if (!id || id.length === 0) {
 				response.writeHead(400, { "Content-Type": "text/plain" });
-				response.end("Invalid researcherid provided");
-				console.log("Invalid researcherid provided");
+				response.end("Invalid id provided");
+				console.log("Invalid id provided");
 				return;
 			}
-			wos.cacheWorks(researcherid).then((data) => {
+			platform.cacheWorks(id).then((data) => {
 				response.writeHead(200, { "Content-Type": "application/json" });
 				response.end(JSON.stringify(data));
 			}).catch((err) => {

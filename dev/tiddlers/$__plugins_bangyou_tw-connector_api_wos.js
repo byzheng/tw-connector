@@ -13,7 +13,6 @@ Web of Science utility for TiddlyWiki
         return;
     }
     const fetch = require('node-fetch');
-    
     const wosCache = require('$:/plugins/bangyou/tw-connector/api/cachehelper.js').cacheHelper("wos", 9999999);
     const wos_daily_request_count_key = "__wos_daily_request_count";
     

@@ -2,10 +2,28 @@
 title: $:/plugins/bangyou/tw-connector/api/authoring.js
 type: application/javascript
 module-type: library
-
-Works for TiddlyWiki
-
 \*/
+
+/**
+ * Authoring module for TiddlyWiki, providing utilities for author information retrieval and cache management
+ * across multiple platforms.
+ *
+ * @module $:/plugins/bangyou/tw-connector/api/authoring.js
+ * @type {application/javascript}
+ * @library
+ *
+ * @returns {Object} An object containing the following methods:
+ *   - bibtex(entry): Fetches author information for a given tiddler entry.
+ *   - cacheUpdate(): Updates the cache for works associated with all platforms and relevant tiddlers.
+ *   - getAuthorByDOI(str): Retrieves author information from all platforms using a DOI string.
+ *
+ * @example
+ * const authoring = require('$:/plugins/bangyou/tw-connector/api/authoring.js').Authoring();
+ * authoring.cacheUpdate();
+ * const authors = authoring.bibtex("Some Tiddler Title");
+ */
+
+
 
 (function (exports) {
     'use strict';
@@ -17,7 +35,8 @@ Works for TiddlyWiki
     var helper = require('$:/plugins/bangyou/tw-connector/utils/helper.js').Helper();
     var platforms = [
         require('$:/plugins/bangyou/tw-connector/api/wos.js').WOS(),
-        require('$:/plugins/bangyou/tw-connector/api/homepage.js').Homepage()
+        require('$:/plugins/bangyou/tw-connector/api/homepage.js').Homepage(),
+        require('$:/plugins/bangyou/tw-connector/api/orcid.js').ORCID()
     ];
     function Authoring() {
         

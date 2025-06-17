@@ -1,6 +1,6 @@
 caption: Authoring
 created: 20250615013742838
-modified: 20250615014811466
+modified: 20250617112541640
 tags: $:/tags/ControlPanel/Settings/TW-Connector
 title: $:/plugins/bangyou/tw-connector/settings/authoring
 type: text/vnd.tiddlywiki
@@ -31,6 +31,26 @@ The field `url` in the tiddlers with tag `Colleague` is used to to retrieve auth
 
 <$checkbox tiddler="$:/config/tw-connector/authoring/homepage/enable" field="text" checked="enable" unchecked="disable" default="enable"><$link to="$:/config/tw-connector/authoring/homepage/enable">Enable Homepage</$link></$checkbox>
 
+
+
+----
+!! ORCID
+
+The field `orcid` in the tiddlers with tag `Colleague` is used to to retrieve author's publications. 
+
+----
+<$link to="$:/config/tw-connector/authoring/orcid/enable">Retrieve Publication from Web of Science</$link> 
+
+<$checkbox tiddler="$:/config/tw-connector/authoring/orcid/enable" field="text" checked="enable" unchecked="disable" default="enable"><$link to="$:/config/tw-connector/authoring/orcid/enable">Enable ORCID</$link></$checkbox>
+
+----
+
+
+<$link to="$:/config/tw-connector/authoring/orcid/daily-limit">Daily Limit of API Requests</$link> 
+
+<$edit-text tiddler="$:/config/tw-connector/authoring/orcid/daily-limit" default="25000" tag="input" />
+
+----
 
 ----
 !! Web of Science
