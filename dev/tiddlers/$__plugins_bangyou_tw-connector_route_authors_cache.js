@@ -1,9 +1,9 @@
 /*\
-title: $:/plugins/bangyou/tw-connector/route/authoring/bibtex.js
+title: $:/plugins/bangyou/tw-connector/route/authors/cache.js
 type: application/javascript
 module-type: route
 
-GET /^\/literature/reference\/(.+)$/
+GET /^\/authoring/cache/update)$/
 
 Get reference list for a tiddler
 
@@ -15,27 +15,20 @@ Get reference list for a tiddler
 	"use strict";
 	var authoring = require("$:/plugins/bangyou/tw-connector/api/authoring.js").Authoring();
 
-	exports.method = "GET";
+	exports.method = "POST";
 	exports.platforms = ["node"];
-	exports.path = /^\/authoring\/bibtex\/(.+)$/;
+	exports.path = /^\/authoring\/cache\/update$/;
 
 	exports.handler = function (request, response, state) {
 
 		try {
-			const entry = decodeURIComponent(state.params[0]);
-			if (!entry || entry.length === 0) {
-				response.writeHead(400, { "Content-Type": "text/plain" });
-				response.end("Invalid entry provided");
-				console.log("Invalid entry provided");
-				return;
-			}
-			authoring.bibtex(entry).then((data) => {
+			authoring.cacheUpdate().then((data) => {
 				response.writeHead(200, { "Content-Type": "application/json" });
 				response.end(JSON.stringify(data));
 			}).catch((err) => {
-				console.error("Error fetching authors:", err);
+				console.error("Error update cache: " + err.message);
 				response.writeHead(500, { "Content-Type": "text/plain" });
-				response.end("Error fetching authors");
+				response.end("Error update cache: " + err.message);
 			});
 		} catch (err) {
 			console.error("Error processing request:", err.message);

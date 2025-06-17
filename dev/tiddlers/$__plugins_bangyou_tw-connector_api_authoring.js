@@ -77,7 +77,7 @@ module-type: library
          * @returns {Promise<string>} - A promise that resolves to the author information.
          * @throws {Error} - Throws an error if the entry is not provided, is empty, or if the tiddler does not exist or lacks required fields.
          */
-        function bibtex(entry) {
+        function getAuthorByTiddler(entry) {
             if (!entry) {
                 throw new Error('No entry provided for bibtex conversion');
             }
@@ -126,7 +126,7 @@ module-type: library
         }
 
         return {
-            bibtex: bibtex,
+            getAuthorByTiddler: getAuthorByTiddler,
             cacheUpdate: cacheUpdate,
             getAuthorByDOI: getAuthorByDOI
         };
