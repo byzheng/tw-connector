@@ -24,14 +24,22 @@ Create a new tiddler with the bibtex entry
 			const bibtex = state.data;
 			if (!bibtex || typeof bibtex !== 'string' || bibtex.trim() === "") {
 				response.writeHead(400, { "Content-Type": "application/json" });
-				response.end(JSON.stringify({ error: "Invalid BibTeX data" }));
+				response.end(JSON.stringify({
+					"status": "error",
+					"message": "Invalid BibTeX data",
+					"code": 400
+				}));
 				console.log("Invalid BibTeX data received");
 				return;
 			}
 			// Check if the tiddler already exists
 			if (!$tw.wiki.tiddlerExists("$:/plugins/tiddlywiki/bibtex")) {
 				response.writeHead(400, { "Content-Type": "application/json" });
-				response.end(JSON.stringify({ error: "$:/plugins/tiddlywiki/bibtex tiddler does not exist" }));
+				response.end(JSON.stringify({
+					"status": "error",
+					"message": "$:/plugins/tiddlywiki/bibtex tiddler does not exist",
+					"code": 400
+				}));
 				console.log("$:/plugins/tiddlywiki/bibtex tiddler does not exist");
 				return;
 			}
@@ -43,7 +51,11 @@ Create a new tiddler with the bibtex entry
 			);
 			if (!newTiddlers || newTiddlers.length === 0) {
 				response.writeHead(400, { "Content-Type": "application/json" });
-				response.end(JSON.stringify({ error: "Failed to parse BibTeX data" }));
+				response.end(JSON.stringify({
+					"status": "error",
+					"message": "Failed to parse BibTeX data",
+					"code": 400
+				}));
 				console.log("Failed to parse BibTeX data");
 				return;
 			}
@@ -75,6 +87,7 @@ Create a new tiddler with the bibtex entry
 			response.writeHead(200, { "Content-Type": "application/json" });
 			response.end(JSON.stringify({
 				"status": "success",
+				"code": 200,
 				"message": "New tiddler created from BibTeX",
 				"tiddlers": results
 			}));
@@ -83,8 +96,12 @@ Create a new tiddler with the bibtex entry
 		} catch (err) {
 			console.error("Error creating new tiddler from bibtex", err);
 			response.writeHead(400);
-			response.end("Error create new tiddler from bibtex: " + err.message);
-			
+			response.end(JSON.stringify({
+				"status": "error",
+				"message": "Error create new tiddler from bibtex: " + err.message,
+				"code": 400
+			}));
+			return
 		}
 
 	};
