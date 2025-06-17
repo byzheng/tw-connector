@@ -20,7 +20,7 @@ Get reference list for a tiddler
 	}
 	exports.method = "GET";
 	exports.platforms = ["node"];
-	exports.path = /^\/literature\/references\/(.+)$/;
+	exports.path = /^\/literature\/([^/]+)\/references$/;
 
 	exports.handler = function (request, response, state) {
 
@@ -28,27 +28,44 @@ Get reference list for a tiddler
 			const doi = state.params[0];
 			const decodedDoi = decodeURIComponent(doi);
 			if (!decodedDoi || decodedDoi.length === 0) {
-				response.writeHead(400, { "Content-Type": "text/plain" });
-				response.end("Invalid DOI provided");
+				response.writeHead(400, { "Content-Type": "application/json" });
+				response.end(JSON.stringify({
+					"status": "error",
+					"code": 400,
+					"message": "Invalid DOI provided"
+				}));
 				console.log("Invalid DOI provided");
 				return;
 			}
 			const openalexAPI = new openalex.OpenAlex();
 			openalexAPI.references(doi).then((data) => {
 				response.writeHead(200, { "Content-Type": "application/json" });
-				response.end(JSON.stringify(data));
+				response.end(JSON.stringify({
+					"status": "success",
+					"code": 200,
+					"message": "References fetched successfully",
+					"data": data
+				}));
 			}).catch((err) => {
 				console.error("Error fetching references:", err);
-				response.writeHead(500, { "Content-Type": "text/plain" });
-				response.end("Error fetching references");
+				response.writeHead(400, { "Content-Type": "application/json" });
+				response.end(JSON.stringify({
+					"status": "error",
+					"code": 400,
+					"message": "Error fetching references"
+				}));
 			});
 			
 			// response.writeHead(200, { "Content-Type": "application/json" });
 			// response.end(JSON.stringify({ "a": "b" }));
 		} catch (err) {
 			console.error("Error processing request:", err);
-			response.writeHead(400);
-			response.end("Error processing upload");
+			response.writeHead(400, { "Content-Type": "application/json" });
+			response.end(JSON.stringify({
+				"status": "error",
+				"code": 400,
+				"message": "Error processing request: " + err.message
+			}));
 		}
 	};
 
