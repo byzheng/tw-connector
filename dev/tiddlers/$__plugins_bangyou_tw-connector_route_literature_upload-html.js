@@ -2,11 +2,42 @@
 title: $:/plugins/bangyou/tw-connector/route/literature/upload-html.js
 type: application/javascript
 module-type: route
-
-POST /^\/liberature/html$/
-
-Save HTML files from literature uploads
 \*/
+
+
+
+/**
+ * TiddlyWiki Node.js Route: /literature/upload-html
+ * 
+ * Handles POST requests for uploading an HTML file containing literature information.
+ * 
+ * - Expects a multipart/form-data POST request with:
+ *   - A file upload (HTML file)
+ *   - A 'url' field in the form data
+ * - Extracts the DOI from the uploaded HTML file using several common meta tag selectors.
+ * - Searches for a tiddler tagged 'bibtex-entry' with a matching DOI.
+ * - If exactly one matching tiddler is found, saves the uploaded HTML file to a configured literature directory,
+ *   using the tiddler's title as the filename.
+ * - Responds with a JSON object indicating success or error.
+ * 
+ * @module $:/plugins/bangyou/tw-connector/route/literature/upload-html.js
+ * @type {application/javascript}
+ * @route POST /literature/upload-html
+ * @platforms ["node"]
+ * @bodyFormat stream
+ * 
+ * @param {IncomingMessage} request - The HTTP request object.
+ * @param {ServerResponse} response - The HTTP response object.
+ * @param {Object} state - TiddlyWiki server state object.
+ * 
+ * @returns {void} Responds directly to the HTTP request with a JSON result.
+ * 
+ * @throws {400} If form data is invalid, file is missing, DOI is not found, or tiddler is not found.
+ * @throws {400} If saving the HTML file fails.
+
+ */
+
+
 (function () {
 	/*jslint node: true, browser: true */
 	/*global $tw: false */
@@ -36,16 +67,23 @@ Save HTML files from literature uploads
 			form.parse(request, async (err, fields, files) => {
 				if (err) {
 					// Respond with error if parsing form fails
-					response.writeHead(500, { "Content-Type": "text/plain" });
-					response.end("Error parsing form data");
+					response.writeHead(400, { "Content-Type": "application/json" });
+					response.end(JSON.stringify({ 
+						"status": "error", 
+						"message": "Error parsing form data",
+						"code": 400}));
 					console.log("Error parsing form data", err);
 					return;
 				}
 
 				// Check that the 'url' field exists in form data
 				if (!(fields && fields.url)) {
-					response.writeHead(400, { "Content-Type": "text/plain" });
-					response.end("No field 'url' found in form data");
+					response.writeHead(400, { "Content-Type": "application/json" });
+					response.end(JSON.stringify({ 
+						"status": "error", 
+						"message": "No field 'url' found in form data",
+						"code": 400
+					}));
 					console.log("No field 'url' found in form data");
 					return;
 				}
@@ -55,8 +93,12 @@ Save HTML files from literature uploads
 
 				// If no files uploaded, respond with error
 				if (!fileKey) {
-					response.writeHead(400, { "Content-Type": "text/plain" });
-					response.end("No file found in upload");
+					response.writeHead(400, { "Content-Type": "application/json" });
+					response.end(JSON.stringify({ 
+						"status": "error", 
+						"message": "No file found in upload",
+						"code": 400
+					}));
 					console.log("No file found in upload");
 					return;
 				}
@@ -75,8 +117,12 @@ Save HTML files from literature uploads
 				} catch (e) {
 					// Fail gracefully if HTML parsing fails
 					console.error("Cheerio parsing failed:", e);
-					response.writeHead(500);
-					response.end("Failed to parse HTML content");
+					response.writeHead(400, { "Content-Type": "application/json" });
+					response.end(JSON.stringify({
+						"status": "error",
+						"message": "Failed to parse HTML content",
+						"code": 400
+					}));
 					console.log("Failed to parse HTML content", e);
 					return;
 				}
@@ -85,8 +131,12 @@ Save HTML files from literature uploads
 				const doi = getDOI(html_doc);
 				if (!doi) {
 					// If no valid DOI found, respond with error
-					response.writeHead(400, { "Content-Type": "text/plain" });
-					response.end("No valid DOI found in the HTML content");
+					response.writeHead(400, { "Content-Type": "application/json" });
+					response.end(JSON.stringify({
+						"status": "error",
+						"message": "No valid DOI found in the HTML content",
+						"code": 400
+					}));
 					console.log("No valid DOI found in the HTML content");
 					return;
 				}
@@ -99,15 +149,23 @@ Save HTML files from literature uploads
 
 				if (tiddlerFound.length == 0) {
 					// No matching tiddler found: respond with error
-					response.writeHead(500, { "Content-Type": "application/json" });
-					response.end("No tiddler found with the given DOI");
+					response.writeHead(400, { "Content-Type": "application/json" });
+					response.end(JSON.stringify({
+						"status": "error",
+						"message": "No tiddler found with the given DOI",
+						"code": 400
+					}));
 					console.log("No tiddler found with the given DOI");
 					return;
 				}
 				if (tiddlerFound.length > 1) {
 					// Multiple matches found: respond with error
-					response.writeHead(500, { "Content-Type": "application/json" });
-					response.end("Multiple tiddlers found with the given DOI");
+					response.writeHead(400, { "Content-Type": "application/json" });
+					response.end(JSON.stringify({
+						"status": "error",
+						"message": "Multiple tiddlers found with the given DOI",
+						"code": 400
+					}));
 					console.log("Multiple tiddlers found with the given DOI");
 					return;
 				}
@@ -117,10 +175,14 @@ Save HTML files from literature uploads
 
 				// Check tiddler validity
 				if (!(tiddler && tiddler.fields && tiddler.fields.title)) {
-					response.writeHead(500, { "Content-Type": "application/json" });
-					response.end("Tiddler not found or invalid");
+					response.writeHead(400, { "Content-Type": "application/json" });
+					response.end(JSON.stringify({
+						"status": "error",
+						"message": "Tiddler not found or invalid",
+						"code": 400
+					}));
 					console.log("Tiddler not found or invalid");
-					return
+					return;
 				}
 				// Extract title from tiddler fields
 				const tiddlerTitle = tiddler.fields.title;
@@ -146,8 +208,12 @@ Save HTML files from literature uploads
 					console.log(`File saved successfully at ${fullPathLiteratureHtml}`);
 				} catch (err) {
 					// Handle any error during file write
-					response.writeHead(500, { "Content-Type": "application/json" });
-					response.end("Failed to save HTML content to file");
+					response.writeHead(400, { "Content-Type": "application/json" });
+					response.end(JSON.stringify({
+						"status": "error",
+						"message": "Failed to save HTML content to file",
+						"code": 400
+					}));
 					console.error(`Error saving file at ${htmlContent}:`, err);
 				}
 				// // Update references and citations for tiddlers
@@ -181,14 +247,22 @@ Save HTML files from literature uploads
 
 				// Respond success after everything completes
 				response.writeHead(200, { "Content-Type": "application/json" });
-				response.end(JSON.stringify({ status: "success" }));
+				response.end(JSON.stringify({ 
+					"status": "success",
+					"message": "HTML file uploaded and processed successfully",
+					"code": 200
+				}));
 				console.log("Form data processed successfully");
 			});
 		} catch (err) {
 			// Catch-all error handler for unexpected errors
 			console.log("Error parsing or writing uploaded file", err);
-			response.writeHead(400);
-			response.end("Error processing upload");
+			response.writeHead(400, { "Content-Type": "application/json" });
+			response.end(JSON.stringify({
+				"status": "error",
+				"message": "Error processing upload",
+				"code": 400
+			}));
 			console.error("Error processing upload", err);
 		}
 
