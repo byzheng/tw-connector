@@ -133,7 +133,7 @@ message widget
             return;
         }
 
-        fetch("/literature", {
+        fetch("/literatures", {
             method: "POST",
             headers: {
                 "Content-Type": "text/plain",
