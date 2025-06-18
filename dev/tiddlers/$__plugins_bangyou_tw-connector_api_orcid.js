@@ -168,14 +168,17 @@ ORCID utility for TiddlyWiki
             const matchingTiddlers = $tw.wiki.filterTiddlers(filter);
             return matchingTiddlers;
         }
-
+        function removeExpiredEntries() {
+            cacheHelper.removeExpiredEntries();
+        }
         return {
             isEnabled: isEnabled,
             cacheWorks: cacheWorks,
             getAuthorByDOI: getAuthorByDOI,
             getPlatformField: function () {
                 return platform_field;
-            }
+            },
+            removeExpiredEntries: removeExpiredEntries
         };
     }
 

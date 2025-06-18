@@ -1,6 +1,6 @@
 caption: Authoring
 created: 20250615013742838
-modified: 20250617112541640
+modified: 20250618102325598
 tags: $:/tags/ControlPanel/Settings/TW-Connector
 title: $:/plugins/bangyou/tw-connector/settings/authoring
 type: text/vnd.tiddlywiki
@@ -20,6 +20,17 @@ The tiddlers with tag `Colleague` is used to filter authors for publication.
 The author's publication will be retrieved after expired days.
 
 ----
+
+
+<$link to="$:/config/tw-connector/authoring/delete-maximum">Maximum Item to Delete</$link> 
+
+<$edit-text tiddler="$:/config/tw-connector/authoring/delete-maximum" default="10" tag="input" />
+
+
+The maximum number of items is deleted at each request.
+
+----
+
 
 !! Homepage
 

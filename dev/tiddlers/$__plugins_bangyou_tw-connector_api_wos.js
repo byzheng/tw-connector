@@ -7,6 +7,7 @@ Web of Science utility for TiddlyWiki
 
 \*/
 
+
 (function (exports) {
     'use strict';
     if (!$tw.node) {
@@ -70,7 +71,8 @@ Web of Science utility for TiddlyWiki
             }
             const apiKey = getWOSApiKey();
             if (!apiKey || apiKey === "") {
-                throw new Error("Web of Science API key is not configured. Please set it in $:/config/tw-connector/api/wos tiddler.");
+                console.error("Web of Science API key is not configured. Please set it in $:/config/tw-connector/api/wos tiddler.");
+                return;
             }
             const headers = {
                 "X-ApiKey": apiKey
@@ -78,7 +80,7 @@ Web of Science utility for TiddlyWiki
             const response = await fetch(url, { headers });
             const today = new Date().toISOString().slice(0, 10);
             const countObj = { count: currentCount + 1, day: today };
-            console.log(`Web of Science API request count for today (${today}): ${countObj.count}`);
+            //console.log(`Web of Science API request count for today (${today}): ${countObj.count}`);
             wosCache.addEntry(wos_daily_request_count_key, countObj, undefined, false);
             // Simulate a delay to avoid hitting rate limits too quickly
             await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
@@ -183,14 +185,17 @@ Web of Science utility for TiddlyWiki
             const matchingTiddlers = $tw.wiki.filterTiddlers(filter);
             return matchingTiddlers;
         }
-
+        function removeExpiredEntries() {
+            cacheHelper.removeExpiredEntries();
+        }
         return {
             isEnabled: isEnabled,
             cacheWorks: cacheWorks,
             getAuthorByDOI: getAuthorByDOI,
             getPlatformField: function () {
                 return platform_field;
-            }
+            },
+            removeExpiredEntries: removeExpiredEntries
         };
 
     }

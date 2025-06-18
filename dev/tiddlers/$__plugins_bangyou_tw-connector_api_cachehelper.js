@@ -17,9 +17,7 @@ Caching utility for TiddlyWiki with timestamped caching
     const zlib = require('zlib');
 
     // Configuration variables
-    const MAX_CACHE_ITEMS = 1000; // Maximum number of cache entries
-    const CACHE_EXPIRATION_DAYS = 30; // Expiration duration in days
-    const CACHE_EXPIRATION_MS = CACHE_EXPIRATION_DAYS * 24 * 60 * 60 * 1000; // Expiration duration in milliseconds
+    const MAX_CACHE_ITEMS = 99999999999; // Maximum number of cache entries
     const MIN_SAVE_INTERVAL_MS = 10000; // Minimum interval between saves in milliseconds
 
     
@@ -27,6 +25,8 @@ Caching utility for TiddlyWiki with timestamped caching
         let cache = {};
         const this_limit = Math.max(2, limit || MAX_CACHE_ITEMS);
         const wikiTiddlersPath = $tw.boot.wikiTiddlersPath;
+        let expiredDays = 30; // Default expiration days
+        let deleteMaximum = 10; // Default maximum number of items to delete at once
 
         // Validate cacheName: only allow alphanumeric characters, underscores, and dashes
         if (!/^[\w\-]+$/.test(cacheName)) {
@@ -65,6 +65,35 @@ Caching utility for TiddlyWiki with timestamped caching
             }
         }
 
+        function getExpredDays() {
+            const userExpiredDays = $wiki.getTiddlerText('$:/config/tw-connector/authoring/expired-days', '30');
+            if (!userExpiredDays || isNaN(userExpiredDays) || parseInt(userExpiredDays, 10) <= 0) {
+                return expiredDays;
+            }
+            // Validate that userExpiredDays is a positive integer
+            if (!/^\d+$/.test(userExpiredDays)) {
+                console.warn(`Invalid expired days value: ${userExpiredDays}. Using default of ${expiredDays} days.`);
+                return expiredDays;
+            }
+            // Convert userExpiredDays to an integer
+            expiredDays = parseInt(userExpiredDays, 10);
+            return expiredDays;
+        }
+        function getDeleteMaximum() {
+            const userDeleteMaximum = $wiki.getTiddlerText('$:/config/tw-connector/authoring/delete-maximum', '10');
+            if (!userDeleteMaximum || isNaN(userDeleteMaximum) || parseInt(userDeleteMaximum, 10) <= 0) {
+                return deleteMaximum;
+            }
+            // Validate that userDeleteMaximum is a positive integer
+            if (!/^\d+$/.test(userDeleteMaximum)) {
+                console.warn(`Invalid delete maximum value: ${userDeleteMaximum}. Using default of ${deleteMaximum} items.`);
+                return deleteMaximum;
+            }
+            // Convert userDeleteMaximum to an integer
+            deleteMaximum = parseInt(userDeleteMaximum, 10);
+            return deleteMaximum;
+        }
+
         let saveTimeout = null;
         let lastSaveTime = 0;
         // Add an entry to the cache with a timestamp
@@ -84,24 +113,26 @@ Caching utility for TiddlyWiki with timestamped caching
             }
         }
         function removeExpiredEntries() {
-            if (Object.keys(cache).length < this_limit) return;
+            //if (Object.keys(cache).length < this_limit) return;
             const now = Date.now();
             // Remove entries older than the expiration threshold
-            const expirationThreshold = now - CACHE_EXPIRATION_MS;
-            for (const key in cache) {
+            const expirationThreshold = now - getExpredDays() * 24 * 60 * 60 * 1000; // Convert days to milliseconds
+
+            const deleteItemMaximum = getDeleteMaximum();
+            // If not enough expired entries, delete oldest items up to deleteMaximum
+            cacheKeys.sort((a, b) => cache[a].timestamp - cache[b].timestamp);
+            let removedCount = 0;  
+            // Remove expired entries, but only up to deleteItemMaximum items
+            for (const key of cacheKeys) {
+                if (removedCount >= deleteItemMaximum) break;
                 if (cache[key].timestamp < expirationThreshold) {
                     delete cache[key];
-                }
-                if (Object.keys(cache).length < this_limit) {
-                    return; // Stop if we have removed enough entries
+                    removedCount++;
                 }
             }
-
             // Limit cache size to this_limit
             const cacheKeys = Object.keys(cache);
             if (cacheKeys.length > this_limit) {
-                // Sort keys by timestamp ascending
-                cacheKeys.sort((a, b) => cache[a].timestamp - cache[b].timestamp);
                 const keysToRemove = cacheKeys.slice(0, cacheKeys.length - this_limit);
                 for (const key of keysToRemove) {
                     delete cache[key];

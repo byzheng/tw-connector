@@ -57,6 +57,15 @@ module-type: library
             updateProgress.current = 0;
             updateProgress.lastUpdated = new Date();
 
+            // remove cache for all platforms
+            for (const platform of platforms) {
+                try {
+                    await platform.removeExpiredEntries();
+                } catch (error) {
+                    console.error(`Error clearing cache for ${platform.constructor.name}:`, error);
+                }
+            }
+
             for (const [i, tiddlerTitle] of tiddlers.entries()) {
                 const tiddler = $tw.wiki.getTiddler(tiddlerTitle);
                 if (!(tiddler && tiddler.fields)) continue;
@@ -95,7 +104,7 @@ module-type: library
                 lastUpdated: new Date()
             };
 
-            setImmediate(async () => {
+            setTimeout(async () => {
                 try {
                     await cacheUpdate();
                 } catch (err) {
@@ -105,7 +114,7 @@ module-type: library
                     updateProgress.finished = true;
                     updateProgress.lastUpdated = new Date();
                 }
-            });
+            }, 0);
 
             return true;
         }
@@ -164,7 +173,7 @@ module-type: library
             getAuthorByTiddler: getAuthorByTiddler,
             getAuthorByDOI: getAuthorByDOI,
             isUpdating: () => isUpdating,
-            getProgress: () => updateProgress,
+            getUpdateProgress: () => updateProgress,
             startUpdate: startUpdate
         };
 

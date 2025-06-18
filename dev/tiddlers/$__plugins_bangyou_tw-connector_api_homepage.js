@@ -97,13 +97,17 @@ Authoring publication from homepage. Assume all dois in the homepage are publish
             return results;
         }
 
+        function removeExpiredEntries() {
+            cacheHelper.removeExpiredEntries();
+        }
         return {
             isEnabled: isEnabled,
             cacheWorks: cacheWorks,
             getAuthorByDOI: getAuthorByDOI,
             getPlatformField: function () {
                 return platform_field;
-            }
+            },
+            removeExpiredEntries: removeExpiredEntries
         };
 
     }
