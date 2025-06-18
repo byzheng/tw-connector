@@ -156,8 +156,8 @@ message widget
                 this.the_story.addToHistory(title);
             }
         }).catch(error => {
-                console.error("Error add new tidd:", error);
-            });
+            console.error("Error add new tidd:", error);
+        });
 
         return;
     };
@@ -248,23 +248,46 @@ message widget
 
     function insertTextAtCursor(document, text) {
         // Get the active element (should be a text field or textarea)
-        const activeElement = document.activeElement;
-        // Check if the active element is editable
-        if (activeElement && (
-            activeElement.tagName.toLowerCase() === 'textarea' ||
-            activeElement.tagName.toLowerCase() === 'input')) {
-            const start = activeElement.selectionStart;
-            const end = activeElement.selectionEnd;
-
-            // Get the current value of the input/textarea
-            const currentValue = activeElement.value;
-
-            // Insert the text at the cursor position
-            activeElement.value = currentValue.slice(0, start) + text + currentValue.slice(end);
-
-            // Update the cursor position
-            activeElement.selectionStart = activeElement.selectionEnd = start + text.length;
+        let activeElement = document.activeElement;
+        if (!activeElement) {
+            return;
         }
+        console.log(activeElement.tagName);
+        if (activeElement.tagName.toLowerCase() === 'body') {
+            const iframes = document.querySelectorAll('iframe.tc-edit-texteditor.tc-edit-texteditor-body');
+            if (iframes.length > 1) {
+                console.warn("Multiple iframes found in the document. Unable to determine the active element.");
+                return;
+            }
+            try {
+                const iframeDoc = iframes[0].contentDocument || iframes[0].contentWindow.document;
+                console.log(iframeDoc.activeElement.tagName);
+                // Try to find a textarea or input inside the iframe to insert text
+                const iframeActiveElement = iframeDoc.querySelector('textarea, input');
+                if (iframeActiveElement) {
+                    activeElement = iframeActiveElement;
+                }
+            } catch (e) {
+                console.error('Cannot access iframe contents:', e);
+                return
+            }
+        }
+        // Check if the active element is editable
+        if (!(activeElement.tagName.toLowerCase() === 'textarea' ||
+            activeElement.tagName.toLowerCase() === 'input')) {
+            return;
+        }
+        const start = activeElement.selectionStart;
+        const end = activeElement.selectionEnd;
+
+        // Get the current value of the input/textarea
+        const currentValue = activeElement.value;
+
+        // Insert the text at the cursor position
+        activeElement.value = currentValue.slice(0, start) + text + currentValue.slice(end);
+
+        // Update the cursor position
+        activeElement.selectionStart = activeElement.selectionEnd = start + text.length;
     }
 
 })();
