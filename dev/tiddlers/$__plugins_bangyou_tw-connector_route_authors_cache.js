@@ -22,18 +22,30 @@ Get reference list for a tiddler
 	exports.handler = function (request, response, state) {
 
 		try {
-			authoring.cacheUpdate().then((data) => {
-				response.writeHead(200, { "Content-Type": "application/json" });
-				response.end(JSON.stringify(data));
-			}).catch((err) => {
-				console.error("Error update cache: " + err.message);
-				response.writeHead(500, { "Content-Type": "text/plain" });
-				response.end("Error update cache: " + err.message);
-			});
+			if (!authoring.isUpdating()) {
+				authoring.startUpdate();
+			}
+			const progress = authoring.getUpdateProgress();
+			const running = authoring.isUpdating();
+
+			response.writeHead(200, { "Content-Type": "application/json" });
+			response.end(JSON.stringify({
+				status: running ? "in-progress" : (progress.finished ? "finished" : "idle"),
+				code: 200,
+				message: running
+					? "Cache update in progress"
+					: (progress.finished ? "Cache update finished" : "Cache update idle"),
+				data: progress
+			}));
+			return;
 		} catch (err) {
 			console.error("Error processing request:", err.message);
-			response.writeHead(400);
-			response.end("Error processing request: " + err.message);
+			response.writeHead(500, { "Content-Type": "application/json" });
+			response.end(JSON.stringify({
+				status: "error",
+				code: 500,
+				message: "Error processing request: " + err.message
+			}));
 		}
 	};
 
