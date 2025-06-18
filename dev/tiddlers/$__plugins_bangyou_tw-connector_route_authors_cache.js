@@ -3,7 +3,7 @@ title: $:/plugins/bangyou/tw-connector/route/authors/cache.js
 type: application/javascript
 module-type: route
 
-GET /^\/authoring/cache/update)$/
+GET /^\/authoring\/cache$/
 
 Get reference list for a tiddler
 
@@ -17,7 +17,7 @@ Get reference list for a tiddler
 
 	exports.method = "POST";
 	exports.platforms = ["node"];
-	exports.path = /^\/authoring\/cache\/update$/;
+	exports.path = /^\/authors\/cache$/;
 
 	exports.handler = function (request, response, state) {
 
