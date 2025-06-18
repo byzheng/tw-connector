@@ -39,26 +39,35 @@ module-type: library
         require('$:/plugins/bangyou/tw-connector/api/orcid.js').ORCID()
     ];
     function Authoring() {
-        
+        let isUpdating = false;
+        let updateProgress = {
+            started: false,
+            finished: false,
+            current: 0,
+            total: 0,
+            lastUpdated: null
+        };
         async function cacheUpdate() {
+            isUpdating = true;
             const filter = "[tag[Colleague]!has[draft.of]]";
             const tiddlers = $tw.wiki.filterTiddlers(filter);
-            for (const tiddlerTitle of tiddlers) {
+
+            const total = tiddlers.length;
+            updateProgress.total = total;
+            updateProgress.current = 0;
+            updateProgress.lastUpdated = new Date();
+
+            for (const [i, tiddlerTitle] of tiddlers.entries()) {
                 const tiddler = $tw.wiki.getTiddler(tiddlerTitle);
-                if (!(tiddler && tiddler.fields)) {
-                    continue;
-                }
-                // Check if the tiddler has a 'platform id' field or equivalent for each platform
+                if (!(tiddler && tiddler.fields)) continue;
+
                 for (const platform of platforms) {
                     const platformField = platform.getPlatformField();
-                    if (!platformField || !tiddler.fields[platformField]) {
-                        continue; // Skip if the platform field is not defined or empty
-                    }
+                    if (!platformField || !tiddler.fields[platformField]) continue;
+
                     const ids = $tw.utils.parseStringArray(tiddler.fields[platformField]);
                     for (const id of ids) {
-                        if (!id || id === "") {
-                            continue; // Skip if the researcher ID is not defined or empty
-                        }
+                        if (!id) continue;
                         try {
                             await platform.cacheWorks(id);
                         } catch (error) {
@@ -66,17 +75,41 @@ module-type: library
                         }
                     }
                 }
+
+                updateProgress.current = i + 1;
+                updateProgress.lastUpdated = new Date();
             }
-            return true; // Indicate that the cache update was successful
+
+            updateProgress.finished = true;
+            updateProgress.lastUpdated = new Date();
         }
 
-        // get author for a tiddler entry
-        /**
-         * Fetches the author information for a given tiddler entry in TiddlyWiki.
-         * @param {string} entry - The title of the tiddler to fetch author information from.
-         * @returns {Promise<string>} - A promise that resolves to the author information.
-         * @throws {Error} - Throws an error if the entry is not provided, is empty, or if the tiddler does not exist or lacks required fields.
-         */
+        function startUpdate() {
+            if (isUpdating) return false;
+            isUpdating = true;
+            updateProgress = {
+                started: true,
+                finished: false,
+                current: 0,
+                total: 0,
+                lastUpdated: new Date()
+            };
+
+            setImmediate(async () => {
+                try {
+                    await cacheUpdate();
+                } catch (err) {
+                    console.error('Cache update error:', err);
+                } finally {
+                    isUpdating = false;
+                    updateProgress.finished = true;
+                    updateProgress.lastUpdated = new Date();
+                }
+            });
+
+            return true;
+        }
+
         function getAuthorByTiddler(entry) {
             if (!entry) {
                 throw new Error('No entry provided for bibtex conversion');
@@ -110,10 +143,12 @@ module-type: library
             }
             const doi = dois[0]; // Use the first DOI found
             // get author from all platforms
+            
             let authors = [];
             for (const platform of platforms) {
                 try {
                     const author_platform = platform.getAuthorByDOI(doi);
+    
                     if (author_platform) {
                         authors.push(author_platform);
                     }
@@ -127,8 +162,10 @@ module-type: library
 
         return {
             getAuthorByTiddler: getAuthorByTiddler,
-            cacheUpdate: cacheUpdate,
-            getAuthorByDOI: getAuthorByDOI
+            getAuthorByDOI: getAuthorByDOI,
+            isUpdating: () => isUpdating,
+            getProgress: () => updateProgress,
+            startUpdate: startUpdate
         };
 
     }

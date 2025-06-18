@@ -63,7 +63,7 @@ module-type: route
 	exports.platforms = ["node"];
 	exports.path = /^\/literature\/([^/]+)\/authors$/;
 
-	exports.handler = function (request, response, state) {
+	exports.handler = async function (request, response, state) {
 
 		try {
 			const entry = decodeURIComponent(state.params[0]);
@@ -77,16 +77,17 @@ module-type: route
 				console.log("Invalid entry provided");
 				return;
 			}
-			authoring.getAuthorByTiddler(entry).then((data) => {
+			try {
+				const data = await authoring.getAuthorByTiddler(entry);
+
 				response.writeHead(200, { "Content-Type": "application/json" });
 				response.end(JSON.stringify({
 					"status": "success",
 					"code": 200,
 					"message": "Authors fetched successfully",
 					"data": data
-
 				}));
-			}).catch((err) => {
+			} catch (err) {
 				console.error("Error fetching authors:", err);
 				response.writeHead(400, { "Content-Type": "application/json" });
 				response.end(JSON.stringify({
@@ -94,13 +95,13 @@ module-type: route
 					"code": 400,
 					"message": "Error fetching authors"
 				}));
-			});
+			}
 		} catch (err) {
 			console.error("Error processing request:", err.message);
-			response.writeHead(400, { "Content-Type": "application/json" });
+			response.writeHead(500, { "Content-Type": "application/json" });
 			response.end(JSON.stringify({
 				"status": "error",
-				"code": 400,
+				"code": 500,
 				"message": "Error processing request: " + err.message
 			}));
 		}

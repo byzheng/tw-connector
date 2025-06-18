@@ -141,6 +141,7 @@ ORCID utility for TiddlyWiki
                 throw new Error("DOI must be a string");
             }
             const caches = orcidCache.getCaches();
+            
             if (!caches || caches.length === 0) {
                 return [];
             }
@@ -159,6 +160,9 @@ ORCID utility for TiddlyWiki
                         }
                     }
                 }
+            }
+            if (result.length === 0) {
+                return [];
             }
             const filter = `[tag[Colleague]search:orcid:regexp[${result.join("|")}]]`;
             const matchingTiddlers = $tw.wiki.filterTiddlers(filter);

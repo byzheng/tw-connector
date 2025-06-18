@@ -176,7 +176,9 @@ Web of Science utility for TiddlyWiki
                 }
             }
             // Find tiddlers whose 'researcherid' field matches any key in result using a filter
-            
+            if (result.length === 0) {
+                return [];
+            }
             const filter = `[tag[Colleague]search:researcherid:regexp[${result.join("|")}]]`;
             const matchingTiddlers = $tw.wiki.filterTiddlers(filter);
             return matchingTiddlers;

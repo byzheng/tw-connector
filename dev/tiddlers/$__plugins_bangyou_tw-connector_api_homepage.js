@@ -83,6 +83,9 @@ Authoring publication from homepage. Assume all dois in the homepage are publish
                     }
                 }
             }
+            if (matchedUrls.length === 0) {
+                return [];
+            }
             let results = [];
             for (matchedUrl in matchedUrls) {
                 const filter = `[tag[Colleague]] :filter[get[url]match:caseinsensitive[${matchedUrl}]]`;
