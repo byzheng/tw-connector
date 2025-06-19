@@ -66,7 +66,7 @@ Caching utility for TiddlyWiki with timestamped caching
         }
 
         function getExpredDays() {
-            const userExpiredDays = $wiki.getTiddlerText('$:/config/tw-connector/authoring/expired-days', '30');
+            const userExpiredDays = $tw.wiki.getTiddlerText('$:/config/tw-connector/authoring/expired-days', '30');
             if (!userExpiredDays || isNaN(userExpiredDays) || parseInt(userExpiredDays, 10) <= 0) {
                 return expiredDays;
             }
@@ -80,7 +80,7 @@ Caching utility for TiddlyWiki with timestamped caching
             return expiredDays;
         }
         function getDeleteMaximum() {
-            const userDeleteMaximum = $wiki.getTiddlerText('$:/config/tw-connector/authoring/delete-maximum', '10');
+            const userDeleteMaximum = $tw.wiki.getTiddlerText('$:/config/tw-connector/authoring/delete-maximum', '10');
             if (!userDeleteMaximum || isNaN(userDeleteMaximum) || parseInt(userDeleteMaximum, 10) <= 0) {
                 return deleteMaximum;
             }
@@ -119,6 +119,8 @@ Caching utility for TiddlyWiki with timestamped caching
             const expirationThreshold = now - getExpredDays() * 24 * 60 * 60 * 1000; // Convert days to milliseconds
 
             const deleteItemMaximum = getDeleteMaximum();
+            // Limit cache size to this_limit
+            const cacheKeys = Object.keys(cache);
             // If not enough expired entries, delete oldest items up to deleteMaximum
             cacheKeys.sort((a, b) => cache[a].timestamp - cache[b].timestamp);
             let removedCount = 0;  
@@ -130,8 +132,7 @@ Caching utility for TiddlyWiki with timestamped caching
                     removedCount++;
                 }
             }
-            // Limit cache size to this_limit
-            const cacheKeys = Object.keys(cache);
+            
             if (cacheKeys.length > this_limit) {
                 const keysToRemove = cacheKeys.slice(0, cacheKeys.length - this_limit);
                 for (const key of keysToRemove) {

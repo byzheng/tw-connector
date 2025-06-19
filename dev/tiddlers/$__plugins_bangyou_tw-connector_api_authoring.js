@@ -36,7 +36,8 @@ module-type: library
     var platforms = [
         require('$:/plugins/bangyou/tw-connector/api/wos.js').WOS(),
         require('$:/plugins/bangyou/tw-connector/api/homepage.js').Homepage(),
-        require('$:/plugins/bangyou/tw-connector/api/orcid.js').ORCID()
+        require('$:/plugins/bangyou/tw-connector/api/orcid.js').ORCID(),
+        require('$:/plugins/bangyou/tw-connector/api/scholar.js').Scholar()
     ];
     function Authoring() {
         let isUpdating = false;
@@ -91,18 +92,20 @@ module-type: library
 
             updateProgress.finished = true;
             updateProgress.lastUpdated = new Date();
+            console.log("Cache update completed.");
+            return;
         }
 
         function startUpdate() {
             if (isUpdating) return false;
             isUpdating = true;
-            updateProgress = {
-                started: true,
-                finished: false,
-                current: 0,
-                total: 0,
-                lastUpdated: new Date()
-            };
+            // updateProgress = {
+            //     started: true,
+            //     finished: false,
+            //     current: 0,
+            //     total: 0,
+            //     lastUpdated: new Date()
+            // };
 
             setTimeout(async () => {
                 try {

@@ -23,7 +23,7 @@ ORCID utility for TiddlyWiki
     
     const orcid_daily_request_count_key = "__orcid_daily_request_count";
     const platform_field = "orcid"; // Field in tiddler that contains the ORCID ID
-    const orcidCache = require('$:/plugins/bangyou/tw-connector/api/cachehelper.js').cacheHelper("orcid", 9999999);
+    const cacheHelper = require('$:/plugins/bangyou/tw-connector/api/cachehelper.js').cacheHelper("orcid", 9999999);
     function ORCID(host = "https://pub.orcid.org") {
         const this_host = host.replace(/\/+$/, "");
         const path_works = "/v3.0";
@@ -48,10 +48,10 @@ ORCID utility for TiddlyWiki
         }
         function getDailyRequestCount() {
             const today = new Date().toISOString().slice(0, 10);
-            let countObj = orcidCache.getCacheByKey(orcid_daily_request_count_key);
+            let countObj = cacheHelper.getCacheByKey(orcid_daily_request_count_key);
             if (!countObj || !countObj.item || countObj.item.day !== today) {
                 countObj = { count: 0, day: today };
-                orcidCache.addEntry(orcid_daily_request_count_key, countObj, undefined, false);
+                cacheHelper.addEntry(orcid_daily_request_count_key, countObj, undefined, false);
                 return 0;
             }
             return typeof countObj.item.count === "number" ? countObj.item.count : 0;
@@ -69,7 +69,7 @@ ORCID utility for TiddlyWiki
             const today = new Date().toISOString().slice(0, 10);
             const countObj = { count: currentCount + 1, day: today };
             console.log(`ORCID API request count for today (${today}): ${countObj.count}`);
-            orcidCache.addEntry(orcid_daily_request_count_key, countObj, undefined, false);
+            cacheHelper.addEntry(orcid_daily_request_count_key, countObj, undefined, false);
             await new Promise(resolve => setTimeout(resolve, Math.random() * 1000));
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -121,12 +121,12 @@ ORCID utility for TiddlyWiki
             if (!orcid || orcid.length === 0) {
                 throw new Error(`Tiddler has no valid orcid field`);
             }
-            const cacheResult = orcidCache.getCacheByKey(orcid);
+            const cacheResult = cacheHelper.getCacheByKey(orcid);
             if (cacheResult) {
                 return cacheResult.item;
             }
             const works = await orcidWorksGet(orcid);
-            await orcidCache.addEntry(orcid, works);
+            await cacheHelper.addEntry(orcid, works);
             return works;
         }
 
@@ -140,7 +140,7 @@ ORCID utility for TiddlyWiki
             if (typeof doi !== "string") {
                 throw new Error("DOI must be a string");
             }
-            const caches = orcidCache.getCaches();
+            const caches = cacheHelper.getCaches();
             
             if (!caches || caches.length === 0) {
                 return [];
