@@ -147,6 +147,7 @@ message widget
             return response.json();
         }).then(newTiddlers => {
             $tw.syncer.syncFromServer();
+            setTimeout(() => {}, 1000);
             for (let newTiddler of newTiddlers.tiddlers) {
                 const title = newTiddler.title;
                 this.the_story.addToStory(title, "", {

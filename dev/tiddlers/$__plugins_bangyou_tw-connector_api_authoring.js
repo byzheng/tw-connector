@@ -61,6 +61,9 @@ module-type: library
             // remove cache for all platforms
             for (const platform of platforms) {
                 try {
+                    if (typeof platform.clearAllPending === "function") {
+                        platform.clearAllPending();
+                    }
                     await platform.removeExpiredEntries();
                 } catch (error) {
                     console.error(`Error clearing cache for ${platform.constructor.name}:`, error);

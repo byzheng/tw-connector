@@ -53,10 +53,15 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
             const current = getPending();
             if (!current.includes(id)) {
                 current.push(id);
-                cacheHelper.addEntry(pendingKey, current, undefined, false);
+                cacheHelper.addEntry(pendingKey, current);
             }
         }
-
+        function clearAllPending() {
+            if (!isEnabled()) {
+                return;
+            }
+            cacheHelper.addEntry(pendingKey, []);
+        }
         function clearPending(id) {
             if (!isEnabled()) {
                 return;
@@ -70,7 +75,7 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
             }
             let current = getPending();
             current = current.filter(entry => entry !== id);
-            cacheHelper.addEntry(pendingKey, current, undefined, false);
+            cacheHelper.addEntry(pendingKey, current);
         }
 
         function getStatus() {
@@ -89,13 +94,12 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
             if (!id) {
                 throw new Error("Invalid ID format");
             }
-
             const cached = getWorks(id);
-            if (cached && Array.isArray(cached.item) && cached.item.length > 0) {
+            if (cached && Array.isArray(cached) && cached.length > 0) {
                 // Already cached, skip
                 return;
             }
-            if (!Array.isArray(works)) {
+            if (!works || !Array.isArray(works)) {
                 // If works is null or not an array, mark as pending
                 addPending(id);
                 return;
@@ -126,6 +130,7 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
         return {
             isEnabled,
             getStatus,
+            clearAllPending,
             cacheWorks,
             getWorks,
             addPending,
