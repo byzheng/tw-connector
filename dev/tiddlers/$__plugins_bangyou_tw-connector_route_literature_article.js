@@ -16,11 +16,11 @@ Get literature article for a tiddler
 	/*global $tw: false */
 	"use strict";
 	if ($tw.node) {
-        var utils = require("$:/plugins/bangyou/tw-connector/utils/utils.js");
-    }
+		var utils = require("$:/plugins/bangyou/tw-connector/utils/utils.js");
+	}
 	const fs = require('fs'); // Use promise-based fs API for async/await
 	const path = require('path');
-	const { JSDOM } = require("jsdom"); // For DOM parsing of HTML content
+	const { JSDOM, VirtualConsole } = require("jsdom"); // For DOM parsing of HTML content
 
 	exports.method = "GET";
 	exports.platforms = ["node"];
@@ -60,6 +60,16 @@ Get literature article for a tiddler
 		// Compose full path for HTML file using tiddler title
 		const fullPathLiteratureHtml = path.join(fullPathLIterature, "html", tiddlerName + ".html");
 
+		const virtualConsole = new VirtualConsole();
+		virtualConsole.on("error", (error) => {
+			if (error.message.includes("Could not parse CSS stylesheet")) {
+				// Ignore this specific error
+			} else {
+				console.error("Other jsdom error:", error);
+			}
+		});
+
+
 		fs.readFile(fullPathLiteratureHtml, "utf8", (err, html) => {
 			if (err) {
 				response.writeHead(404, { "Content-Type": "text/plain" });
@@ -69,7 +79,9 @@ Get literature article for a tiddler
 			let dom, document;
 			try {
 				// Parse the HTML content into a DOM using JSDOM
-				dom = new JSDOM(html);
+				dom = new JSDOM(html, {
+					virtualConsole,
+				});
 				document = dom.window.document;
 			} catch (e) {
 				// Fail gracefully if HTML parsing fails
@@ -81,18 +93,16 @@ Get literature article for a tiddler
 			}
 
 
-			
+
 			const siteConfigTiddler = $tw.wiki.getTiddler("$:/plugins/bangyou/tw-connector/config/article", "");
 
 			if (!siteConfigTiddler || !siteConfigTiddler.fields || !siteConfigTiddler.fields.text) {
 				response.writeHead(500, { "Content-Type": "text/plain" });
 				response.end("Site configuration not found");
-				console.log("Site configuration not found");				
+				console.log("Site configuration not found");
 				return;
 			}
-			console.log(siteConfigTiddler.fields.text);
 
-			
 			const siteConfig = JSON.parse(siteConfigTiddler.fields.text);
 			if (!siteConfig) {
 				response.writeHead(500, { "Content-Type": "text/plain" });
@@ -101,33 +111,33 @@ Get literature article for a tiddler
 				return;
 			}
 			document = utils.getArticle(document, siteConfig);
-			
-			// Inject script tag before </body>
-			const hightlightScript = document.createElement('script');
-			const scriptText = $tw.wiki.getTiddler("$:/plugins/bangyou/tw-connector/script/highlight.js", "");
+
+			// // Inject script tag before </body>
+			// const hightlightScript = document.createElement('script');
+			// const scriptText = $tw.wiki.getTiddler("$:/plugins/bangyou/tw-connector/script/highlight.js", "");
 
 
-			if (!scriptText) {
-				response.writeHead(500, { "Content-Type": "text/plain" });
-				response.end("Script content not found");
-				console.log("Script content not found");
-				return;
-			}
-			hightlightScript.textContent = scriptText.fields.text || "";
-			document.body.appendChild(hightlightScript);
+			// if (!scriptText) {
+			// 	response.writeHead(500, { "Content-Type": "text/plain" });
+			// 	response.end("Script content not found");
+			// 	console.log("Script content not found");
+			// 	return;
+			// }
+			// hightlightScript.textContent = scriptText.fields.text || "";
+			// document.body.appendChild(hightlightScript);
 
-			// Inject style tag before </body>
-			const styleTiddler = $tw.wiki.getTiddler("$:/plugins/bangyou/tw-connector/style/style.js");
-			if (!styleTiddler) {
-				response.writeHead(500, { "Content-Type": "text/plain" });
-				response.end("Style content not found");
-				console.log("Style content not found");
-				return;
-			}
-			const styleTag = document.createElement('style');
-			styleTag.textContent = styleTiddler.fields.text || "";
-			document.body.appendChild(styleTag);
-			
+			// // Inject style tag before </body>
+			// const styleTiddler = $tw.wiki.getTiddler("$:/plugins/bangyou/tw-connector/style/style.js");
+			// if (!styleTiddler) {
+			// 	response.writeHead(500, { "Content-Type": "text/plain" });
+			// 	response.end("Style content not found");
+			// 	console.log("Style content not found");
+			// 	return;
+			// }
+			// const styleTag = document.createElement('style');
+			// styleTag.textContent = styleTiddler.fields.text || "";
+			// document.body.appendChild(styleTag);
+
 			//const inject = `<script src="/files/inject.js"></script>`;
 			//const modifiedHtml = html.replace(/<\/body>/i, `${inject}</body>`);
 			const modifiedHTML = dom.serialize();

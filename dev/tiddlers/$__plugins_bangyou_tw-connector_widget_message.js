@@ -145,9 +145,9 @@ message widget
                 console.error("Upload failed:", response.statusText);
             }
             return response.json();
-        }).then(newTiddlers => {
+        }).then(async newTiddlers => {
             $tw.syncer.syncFromServer();
-            setTimeout(() => {}, 1000);
+            await new Promise(resolve => setTimeout(resolve, 500));
             for (let newTiddler of newTiddlers.tiddlers) {
                 const title = newTiddler.title;
                 this.the_story.addToStory(title, "", {

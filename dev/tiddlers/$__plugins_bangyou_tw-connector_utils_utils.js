@@ -12,6 +12,15 @@ Utils functions
 
 
 function getURL(document) {
+    // Get entire document as string (if not already in a string)
+    const htmlString = document.documentElement.outerHTML;
+
+    // Match the URL inside the comment
+    const match = htmlString.match(/<!--\s*Page saved with SingleFile\s*url:\s*(.*?)\s*saved date:/);
+    if (match && match[1]) {
+        const savedUrl = match[1].trim();
+        return savedUrl;
+    }
     var urlSelt = [
         "meta[name='prism.url' i]",
         "meta[property='og:url' i]",
@@ -54,7 +63,7 @@ function getArticle(document, siteConfig) {
 
     let siteKey = Object.keys(siteConfig).find(site => url.includes(site));
     if (!siteKey) return document;
-    let { articleSelector} = siteConfig[siteKey];
+    let { articleSelector, removeSelectors } = siteConfig[siteKey];
     if (!Array.isArray(articleSelector)) {
         articleSelector = [articleSelector];
     }
@@ -66,6 +75,14 @@ function getArticle(document, siteConfig) {
             clones.push(el.cloneNode(true)); // true = deep clone
         });
     });
+    
+    if (Array.isArray(removeSelectors)) {
+        removeSelectors.forEach(selector => {
+            clones.forEach(clone => {
+                clone.querySelectorAll(selector).forEach(el => el.remove());
+            });
+        });
+    }
 
     document.body.innerHTML = '';
     clones.forEach(clone => {
