@@ -1,12 +1,14 @@
 caption: Authoring
 created: 20250615013742838
-modified: 20250618102325598
+modified: 20250804032421348
 tags: $:/tags/ControlPanel/Settings/TW-Connector
 title: $:/plugins/bangyou/tw-connector/settings/authoring
 type: text/vnd.tiddlywiki
 
 
 The tiddlers with tag `Colleague` is used to filter authors for publication. 
+
+
 
 
 ----
@@ -28,6 +30,23 @@ The author's publication will be retrieved after expired days.
 
 
 The maximum number of items is deleted at each request.
+
+----
+
+!! Automatic Updates
+
+Automatically update caches for authoring at the scheduled hour and minute.
+
+* If **Hour** is set to `-1`, the update will run **every hour**.
+* If **Minute** is set to `-1`, the update will run **every minute**.
+* If both are `-1`, the update will run **every minute of every hour**.
+
+<$checkbox tiddler="$:/config/tw-connector/authoring/auto-update/enable" field="text" checked="enable" unchecked="disable" default="disable">
+  <$link to="$:/config/tw-connector/authoring/auto-update/enable">Enable Automatic Updates</$link>
+</$checkbox>
+
+* Hour: <$edit-text tiddler="$:/config/tw-connector/authoring/auto-update/hour" default="-1" tag="input" />
+* Minute: <$edit-text tiddler="$:/config/tw-connector/authoring/auto-update/minute" default="-1" tag="input" />
 
 ----
 

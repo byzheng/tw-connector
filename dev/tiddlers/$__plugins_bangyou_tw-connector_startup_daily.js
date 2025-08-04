@@ -6,20 +6,75 @@ module-type: startup
 
 "use strict";
 
-exports.name = "cron-literature-updating";
+exports.name = "cron-authoring-auto-update";
 exports.platforms = ["node"];
 exports.after = ["startup"];
 exports.synchronous = true;
 
 exports.startup = function () {
+    const ENABLE_TIDDLER = "$:/config/tw-connector/authoring/auto-update/enable";
+    const HOUR_TIDDLER = "$:/config/tw-connector/authoring/auto-update/hour";
+    const MINUTE_TIDDLER = "$:/config/tw-connector/authoring/auto-update/minute";
 
-    // // Schedule the task to run daily at 11:00 AM
-    // setInterval(() => {
-    //     console.log("Checking if it's time to run the daily job...");
-    //     const now = new Date();
-    //     if (now.getMinutes() === 0 && now.getHours() === 11) {
-    //         console.log("⏰ Running daily 11 AM job at", now.toLocaleString());
-    //     }
-    // }, 60 * 1000); // check every minute
+    let lastRun = "";
 
+    function isValidHour(hour) {
+        return hour === -1 || (Number.isInteger(hour) && hour >= 0 && hour <= 23);
+    }
+
+    function isValidMinute(minute) {
+        return minute === -1 || (Number.isInteger(minute) && minute >= 0 && minute <= 59);
+    }
+
+
+    function getField(title, defaultValue = "-1") {
+        const tiddler = $tw.wiki.getTiddler(title);
+        return tiddler ? tiddler.fields.text.trim() : defaultValue;
+    }
+
+    function shouldRunNow(now, hourStr, minuteStr) {
+        const hour = parseInt(hourStr);
+        const minute = parseInt(minuteStr);
+        const nowHour = now.getHours();
+        const nowMinute = now.getMinutes();
+        const key = `${now.toDateString()} ${nowHour}:${nowMinute}`;
+    
+        if (!isValidHour(hour) || !isValidMinute(minute)) {
+            console.warn(`⚠️ Invalid schedule time: hour=${hourStr}, minute=${minuteStr}`);
+            return false;
+        }
+
+        // Prevent repeated execution
+        if (lastRun === key) return false;
+
+        const matchHour = (hour === -1 || nowHour === hour);
+        const matchMinute = (minute === -1 || nowMinute === minute);
+        
+        if (matchHour && matchMinute) {
+            lastRun = key;
+            return true;
+        }
+        return false;
+    }
+    console.log("⏰ Auto update scheduled to run daily at", getField(HOUR_TIDDLER, "-1"), ":", getField(MINUTE_TIDDLER, "-1"));
+    setInterval(() => {
+        const enabled = getField(ENABLE_TIDDLER, "enable");
+        if (enabled !== "enable") return;
+
+        const now = new Date();
+        const hour = getField(HOUR_TIDDLER, "-1");
+        const minute = getField(MINUTE_TIDDLER, "-1");
+
+        if (shouldRunNow(now, hour, minute)) {
+            console.log("⏰ Auto update triggered at", now.toLocaleString());
+            var authoring = require("$:/plugins/bangyou/tw-connector/api/authoring.js").Authoring();
+            if (authoring.isUpdating()) {
+				return;
+			}
+            authoring.startUpdate();
+            console.log("✅ Auto update caches started successfully.");
+            return;
+        }
+
+    }, 60 * 1000); // Check every minute
 };
