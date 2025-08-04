@@ -29,9 +29,9 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
         function isEnabled() {
             let tiddler = $tw.wiki.getTiddler("$:/config/tw-connector/authoring/scholar/enable");
             if (!tiddler) {
-                return true; // default to enabled ("yes")
+                return false; // default to disabled
             }
-            return tiddler && tiddler.fields.text === "yes";
+            return tiddler && tiddler.fields.text === "enable";
         }
 
         function getPending() {

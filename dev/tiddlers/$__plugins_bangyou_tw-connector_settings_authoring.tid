@@ -1,6 +1,6 @@
 caption: Authoring
 created: 20250615013742838
-modified: 20250804041521409
+modified: 20250804111308691
 tags: $:/tags/ControlPanel/Settings/TW-Connector
 title: $:/plugins/bangyou/tw-connector/settings/authoring
 type: text/vnd.tiddlywiki
@@ -68,13 +68,13 @@ The field `google-scholar` in the tiddlers with tag `Colleague` is used to to re
 
 <$link to="$:/config/tw-connector/authoring/scholar/enable">Retrieve Publication from Google Scholar</$link> 
 
-<$checkbox tiddler="$:/config/tw-connector/authoring/scholar/enable" field="text" checked="enable" unchecked="disable" default="disable"><$link to="$:/config/tw-connector/authoring/scholar/enable">Enable ORCID</$link></$checkbox>
+<$checkbox tiddler="$:/config/tw-connector/authoring/scholar/enable" field="text" checked="enable" unchecked="disable" default="disable"><$link to="$:/config/tw-connector/authoring/scholar/enable">Enable Google Scholar</$link></$checkbox>
 
 
 
 <$link to="$:/config/tw-connector/authoring/scholar/daily-limit">Limit to Open Scholar Pages</$link> 
 
-<$edit-text tiddler="$:/config/tw-connector/authoring/scholar/daily-limit" default="10" tag="input" />
+<$edit-text tiddler="$:/config/tw-connector/authoring/scholar/daily-limit" default="5" tag="input" />
 
 
 

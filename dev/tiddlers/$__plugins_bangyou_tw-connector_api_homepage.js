@@ -27,7 +27,7 @@ Authoring publication from homepage. Assume all dois in the homepage are publish
             if (!tiddler) {
                 return true; // default to enabled ("yes")
             }
-            return tiddler && tiddler.fields.text === "yes";
+            return tiddler && tiddler.fields.text === "enable";
         }
         async function cacheWorks(url) {
             if (!isEnabled()) {

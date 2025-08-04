@@ -33,7 +33,7 @@ ORCID utility for TiddlyWiki
             if (!tiddler) {
                 return true; // default to enabled ("yes")
             }
-            return tiddler && tiddler.fields.text === "yes";
+            return tiddler && tiddler.fields.text === "enable";
         }
         function getORCIDDailyLimit() {
             if (typeof $tw !== "undefined" && $tw.wiki) {

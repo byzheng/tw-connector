@@ -28,7 +28,7 @@ Web of Science utility for TiddlyWiki
             if (!tiddler) {
                 return true; // default to enabled ("yes")
             }
-            return tiddler && tiddler.fields.text === "yes";
+            return tiddler && tiddler.fields.text === "enable";
         }
         function getWOSDailyLimit() {
             // In TiddlyWiki, global $tw object provides access to tiddlers
