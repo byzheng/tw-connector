@@ -58,7 +58,7 @@ exports.startup = function () {
     }
     console.log("⏰ Auto update scheduled to run daily at", getField(HOUR_TIDDLER, "-1"), ":", getField(MINUTE_TIDDLER, "-1"));
     setInterval(() => {
-        const enabled = getField(ENABLE_TIDDLER, "enable");
+        const enabled = getField(ENABLE_TIDDLER, "disable");
         if (enabled !== "enable") return;
 
         const now = new Date();
