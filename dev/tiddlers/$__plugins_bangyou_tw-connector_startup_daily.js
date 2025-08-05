@@ -26,10 +26,9 @@ exports.startup = function () {
         return minute === -1 || (Number.isInteger(minute) && minute >= 0 && minute <= 59);
     }
 
-
     function getField(title, defaultValue = "-1") {
         const tiddler = $tw.wiki.getTiddler(title);
-        return tiddler ? tiddler.fields.text.trim() : defaultValue;
+        return tiddler ? tiddler.fields.text : defaultValue;
     }
 
     function shouldRunNow(now, hourStr, minuteStr) {

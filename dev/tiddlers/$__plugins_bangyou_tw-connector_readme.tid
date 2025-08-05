@@ -1,14 +1,15 @@
 created: 20240802085639320
-modified: 20241209004616134
+modified: 20250805041459539
 tags: 
 title: $:/plugins/bangyou/tw-connector/readme
 type: text/vnd.tiddlywiki
 
 ; tw-connector
 
-A small plugin for Chrome Extension [[PubConnector|https://github.com/byzheng/PubConnector]] to receive message from Chrome Extension background.js to 
+TW-Connector is a plugin for Chrome Extension [[PubConnector|https://github.com/byzheng/PubConnector]] to access the publication information from web browser Chrome 
 
-* open tiddler in the story river.
+* Open tiddler in the story river from different platforms (Publisher, Google Scholar).
+* Retrieve and cache authors/colleagues' publication list from different platforms.
 
 ;Code and demo
 
