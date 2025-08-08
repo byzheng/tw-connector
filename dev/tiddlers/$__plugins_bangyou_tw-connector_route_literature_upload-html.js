@@ -49,8 +49,8 @@ module-type: route
 	const { JSDOM } = require("jsdom"); // For DOM parsing of HTML content
 
 	// if ($tw.node) {
-    //     var crossref = require("$:/plugins/bangyou/tw-connector/utils/crossref.js");
-    // }
+	//     var crossref = require("$:/plugins/bangyou/tw-connector/utils/crossref.js");
+	// }
 
 	exports.method = "POST";
 	exports.platforms = ["node"];
@@ -68,10 +68,11 @@ module-type: route
 				if (err) {
 					// Respond with error if parsing form fails
 					response.writeHead(400, { "Content-Type": "application/json" });
-					response.end(JSON.stringify({ 
-						"status": "error", 
+					response.end(JSON.stringify({
+						"status": "error",
 						"message": "Error parsing form data",
-						"code": 400}));
+						"code": 400
+					}));
 					console.log("Error parsing form data", err);
 					return;
 				}
@@ -79,8 +80,8 @@ module-type: route
 				// Check that the 'url' field exists in form data
 				if (!(fields && fields.url)) {
 					response.writeHead(400, { "Content-Type": "application/json" });
-					response.end(JSON.stringify({ 
-						"status": "error", 
+					response.end(JSON.stringify({
+						"status": "error",
 						"message": "No field 'url' found in form data",
 						"code": 400
 					}));
@@ -94,8 +95,8 @@ module-type: route
 				// If no files uploaded, respond with error
 				if (!fileKey) {
 					response.writeHead(400, { "Content-Type": "application/json" });
-					response.end(JSON.stringify({ 
-						"status": "error", 
+					response.end(JSON.stringify({
+						"status": "error",
 						"message": "No file found in upload",
 						"code": 400
 					}));
@@ -247,7 +248,7 @@ module-type: route
 
 				// Respond success after everything completes
 				response.writeHead(200, { "Content-Type": "application/json" });
-				response.end(JSON.stringify({ 
+				response.end(JSON.stringify({
 					"status": "success",
 					"message": "HTML file uploaded and processed successfully",
 					"code": 200
@@ -267,20 +268,27 @@ module-type: route
 		}
 
 		// Function to extract DOI string from HTML document
-		function getDOI(html) {
+
+		function getDOI() {
 			var doi_sel = [
 				"meta[name='dc.Identifier' i][scheme='doi' i]",
 				"meta[name='dc.Identifier' i]",
 				"meta[name='citation_doi' i]",
 				"meta[property='citation_doi' i]",
+				"meta[name='DC.Identifier.DOI' i]",
 				'ul.nova-legacy-e-list li +li a.nova-legacy-e-link[href*="doi.org"]', // for researchgate
 				'div strong +a[href*="doi.org"]', // for IEEE
 				'li[data-test-id="paper-doi"] .doi__link' // for sematic
 			];
 
+			function isValidDOI(doi) {
+				const doiRegex = /^10.\d{4,9}\/[-._;()/:a-zA-Z0-9]+$/;
+				return doiRegex.test(doi);
+			}
 			var doi;
 			for (let i = 0; i < doi_sel.length; i++) {
-				var ele = html.querySelector(doi_sel[i]);
+
+				var ele = document.querySelector(doi_sel[i]);
 				if (ele === undefined || ele === null) {
 					continue;
 				}
@@ -291,22 +299,19 @@ module-type: route
 						break;
 					}
 				}
-
+				if (!doi) {
+					continue;
+				}
 				doi = doi.replace('doi:', '');
 				doi = doi.replace(/^(https?:\/\/.*?doi\.org\/)?/, '');
-				break;
+				if (isValidDOI(doi)) {
+					return doi;
+				}
 			}
 
-			function isValidDOI(doi) {
-				const doiRegex = /^10.\d{4,9}\/[-._;()/:a-zA-Z0-9]+$/;
-				return doiRegex.test(doi);
-			}
-
-			if (!isValidDOI(doi)) {
-				return;
-			}
-			return doi;
+			return;
 		}
+
 
 	};
 
