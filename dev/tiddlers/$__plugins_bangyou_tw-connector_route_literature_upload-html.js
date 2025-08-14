@@ -269,7 +269,7 @@ module-type: route
 
 		// Function to extract DOI string from HTML document
 
-		function getDOI() {
+		function getDOI(html) {
 			var doi_sel = [
 				"meta[name='dc.Identifier' i][scheme='doi' i]",
 				"meta[name='dc.Identifier' i]",
@@ -288,7 +288,7 @@ module-type: route
 			var doi;
 			for (let i = 0; i < doi_sel.length; i++) {
 
-				var ele = document.querySelector(doi_sel[i]);
+				var ele = html.querySelector(doi_sel[i]);
 				if (ele === undefined || ele === null) {
 					continue;
 				}

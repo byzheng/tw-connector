@@ -241,7 +241,7 @@ message widget
     async function copyToClipboard(text) {
         try {
             await navigator.clipboard.writeText(text);
-            console.log("Text copied to clipboard:", text);
+            //console.log("Text copied to clipboard:", text);
         } catch (err) {
             console.error("Failed to copy text:", err);
         }
@@ -253,7 +253,7 @@ message widget
         if (!activeElement) {
             return;
         }
-        console.log(activeElement.tagName);
+        //console.log(activeElement.tagName);
         if (activeElement.tagName.toLowerCase() === 'body') {
             const iframes = document.querySelectorAll('iframe.tc-edit-texteditor.tc-edit-texteditor-body');
             if (iframes.length > 1) {
@@ -262,7 +262,7 @@ message widget
             }
             try {
                 const iframeDoc = iframes[0].contentDocument || iframes[0].contentWindow.document;
-                console.log(iframeDoc.activeElement.tagName);
+                //console.log(iframeDoc.activeElement.tagName);
                 // Try to find a textarea or input inside the iframe to insert text
                 const iframeActiveElement = iframeDoc.querySelector('textarea, input');
                 if (iframeActiveElement) {

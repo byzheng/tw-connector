@@ -162,6 +162,9 @@ module-type: library
             let authors = [];
             for (const platform of platforms) {
                 try {
+                    if (typeof platform.getAuthorByDOI !== 'function') {
+                        return;
+                    }
                     const author_platform = platform.getAuthorByDOI(doi);
     
                     if (author_platform) {

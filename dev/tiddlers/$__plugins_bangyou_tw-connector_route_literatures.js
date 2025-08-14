@@ -119,7 +119,7 @@ module-type: route
 					tags = tags.concat(authors);
 				}
 				newTiddler["tags"] = tags;
-				console.log(newTiddler);
+				//console.log(newTiddler);
 				$tw.wiki.addTiddler(new $tw.Tiddler(newTiddler));
 				results.push(newTiddler);
 			}
