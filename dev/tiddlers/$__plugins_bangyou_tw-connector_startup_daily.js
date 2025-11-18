@@ -12,6 +12,11 @@ exports.after = ["startup"];
 exports.synchronous = true;
 
 exports.startup = function () {
+    const firstArg = $tw.boot?.argv?.[0];
+    if (firstArg !== "--listen") {
+        // Running a CLI command: do NOT start cron timers
+        return;
+    }
     const ENABLE_TIDDLER = "$:/config/tw-connector/authoring/auto-update/enable";
     const HOUR_TIDDLER = "$:/config/tw-connector/authoring/auto-update/hour";
     const MINUTE_TIDDLER = "$:/config/tw-connector/authoring/auto-update/minute";
