@@ -16,11 +16,13 @@ module-type: library
  *   - bibtex(entry): Fetches author information for a given tiddler entry.
  *   - cacheUpdate(): Updates the cache for works associated with all platforms and relevant tiddlers.
  *   - getAuthorByDOI(str): Retrieves author information from all platforms using a DOI string.
+ *   - getLatest(days): Retrieves recent items from all platforms published within the specified number of days.
  *
  * @example
  * const authoring = require('$:/plugins/bangyou/tw-connector/api/authoring.js').Authoring();
  * authoring.cacheUpdate();
  * const authors = authoring.bibtex("Some Tiddler Title");
+ * const recentItems = authoring.getLatest(30); // Get items from last 30 days
  */
 
 
@@ -178,9 +180,34 @@ module-type: library
             return authors;
         }
 
+        function getLatest(days) {
+            if (!days || typeof days !== 'number' || days <= 0) {
+                throw new Error('Invalid days parameter: must be a positive number');
+            }
+            
+            let allItems = [];
+
+            // Iterate through all platforms and collect recent items
+            for (const platform of platforms) {
+                try {
+                    if (typeof platform.getLatest !== 'function') {
+                        continue;
+                    }
+                    const items = platform.getLatest(days);
+                    if (items && Array.isArray(items)) {
+                        allItems = allItems.concat(items);
+                    }
+                } catch (error) {
+                    console.error(`Error processing platform ${platform.constructor.name}:`, error);
+                }
+            }
+            return allItems;
+        }
+
         return {
             getAuthorByTiddler: getAuthorByTiddler,
             getAuthorByDOI: getAuthorByDOI,
+            getLatest: getLatest,
             isUpdating: () => isUpdating,
             getUpdateProgress: () => updateProgress,
             startUpdate: startUpdate
