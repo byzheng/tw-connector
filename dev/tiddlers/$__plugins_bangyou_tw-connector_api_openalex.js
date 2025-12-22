@@ -54,49 +54,68 @@ OpenAlex API utility for TiddlyWiki with timestamped caching
             return typeof countObj.item.count === "number" ? countObj.item.count : 0;
         }
 
-        async function getAuthorWorks(openalexId) {
-            let allWorks = [];
+        async function getAllPaginatedResults(path, baseQuery = {}, options = {}) {
+            const { 
+                perPage = 200, 
+                maxPages = null, 
+                delay = 500,
+                logProgress = true 
+            } = options;
+            
+            let allResults = [];
             let page = 1;
-            const perPage = 200; // Maximum items per page
             let totalCount = 0;
             let hasMorePages = true;
 
-            console.log(`Starting to retrieve works for OpenAlex ID: ${openalexId}`);
+            if (logProgress) {
+                console.log(`Starting paginated request to ${path}...`);
+            }
 
-            while (hasMorePages) {
-                const url = buildOpenAlexApiUrl(`/works`, { 
-                    filter: `authorships.author.id:${openalexId}`,
+            while (hasMorePages && (maxPages === null || page <= maxPages)) {
+                const query = {
+                    ...baseQuery,
                     per_page: perPage,
                     page: page
-                });
+                };
 
-                console.log(`Fetching page ${page} with ${perPage} items per page...`);
+                const url = buildOpenAlexApiUrl(path, query);
+
+                if (logProgress) {
+                    console.log(`Fetching page ${page} with ${perPage} items per page...`);
+                }
                 
                 try {
                     const data = await openalexRequest(url);
                     
                     if (data && Array.isArray(data.results)) {
-                        allWorks.push(...data.results);
+                        allResults.push(...data.results);
                         
                         // Get total count from first page
                         if (page === 1 && data.meta) {
                             totalCount = data.meta.count;
-                            console.log(`Total works available: ${totalCount}`);
+                            if (logProgress) {
+                                console.log(`Total items available: ${totalCount}`);
+                            }
                         }
                         
-                        // Check if we have more pages
-                        const currentResultsCount = allWorks.length;
-                        hasMorePages = data.results.length === perPage && currentResultsCount < totalCount;
+                        // Check if we have more pages using meta.count
+                        hasMorePages = allResults.length < totalCount;
                         
-                        console.log(`Retrieved ${data.results.length} works from page ${page}. Total so far: ${currentResultsCount}${totalCount > 0 ? `/${totalCount}` : ''}`);
+                        if (logProgress) {
+                            console.log(`Retrieved ${data.results.length} items from page ${page}. Total so far: ${allResults.length}${totalCount > 0 ? `/${totalCount}` : ''}`);
+                        }
                         
                         if (hasMorePages) {
                             page++;
-                            // Add a small delay between requests to be respectful to the API
-                            await new Promise(resolve => setTimeout(resolve, 500));
+                            // Add delay between requests to be respectful to the API
+                            if (delay > 0) {
+                                await new Promise(resolve => setTimeout(resolve, delay));
+                            }
                         }
                     } else {
-                        console.warn(`No results found on page ${page}`);
+                        if (logProgress) {
+                            console.warn(`No results found on page ${page}`);
+                        }
                         hasMorePages = false;
                     }
                 } catch (error) {
@@ -105,8 +124,38 @@ OpenAlex API utility for TiddlyWiki with timestamped caching
                 }
             }
 
-            console.log(`Retrieved ${allWorks.length} total works for OpenAlex ID: ${openalexId}`);
-            return allWorks;
+            if (logProgress) {
+                console.log(`Retrieved ${allResults.length} total items from ${path}`);
+            }
+            return allResults;
+        }
+
+        async function getAuthorWorks(openalexId) {
+            console.log(`Starting to retrieve works for OpenAlex ID: ${openalexId}`);
+            
+            const works = await getAllPaginatedResults('/works', {
+                filter: `authorships.author.id:${openalexId}`
+            });
+            // Filter each work to only keep specified properties
+            const filteredWorks = works.map(work => ({
+                id: work.id,
+                doi: work.doi,
+                title: work.title,
+                publication_year: work.publication_year,
+                publication_date: work.publication_date,
+                primary_location: work.primary_location,
+                ids: work.ids,
+                authorships: work.authorships?.map(authorship => ({
+                    author_position: authorship.author_position,
+                    author: authorship.author
+                }))
+            }));
+            
+            
+            console.log(JSON.stringify(filteredWorks, null, 2));
+
+            return filteredWorks;
+
         }
 
         async function cacheWorks(openalexId) {
