@@ -39,7 +39,8 @@ module-type: library
         require('$:/plugins/bangyou/tw-connector/api/wos.js').WOS(),
         require('$:/plugins/bangyou/tw-connector/api/homepage.js').Homepage(),
         require('$:/plugins/bangyou/tw-connector/api/orcid.js').ORCID(),
-        require('$:/plugins/bangyou/tw-connector/api/scholar.js').Scholar()
+        require('$:/plugins/bangyou/tw-connector/api/scholar.js').Scholar(),
+        require('$:/plugins/bangyou/tw-connector/api/openalex.js').OpenAlex()
     ];
     function Authoring() {
         let isUpdating = false;

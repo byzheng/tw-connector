@@ -5,45 +5,56 @@ module-type: route
 \*/
 
 /**
- * TiddlyWiki Route: POST /^\/literatures$/
+ * TiddlyWiki Route: GET /^\/literatures\/latest$/
  * 
- * Creates new tiddler(s) from a provided BibTeX entries.
+ * Retrieves the latest literature tiddlers from the wiki based on creation/modification time.
  * 
  * Request:
- *   - Method: POST
- *   - Path: /literatures
- *   - Body: Raw BibTeX string (in state.data)
+ *   - Method: GET
+ *   - Path: /literatures/latest
+ *   - Query Parameters:
+ *     - days (optional): Number of days to look back for latest entries (default: 60)
  * 
  * Response:
- *   - 200: On success, returns JSON with status "success", created tiddlers.
- *   - 400: On error, returns JSON with status "error" and error message.
+ *   - 200: On success, returns JSON with status "success", message, and array of latest tiddlers
+ *   - 400: On error, returns JSON with status "error", error message, and error code
+ * 
+ * Response Format:
+ *   Success:
+ *   {
+ *     "status": "success",
+ *     "code": 200,
+ *     "message": "Latest literatures retrieved successfully for past X days",
+ *     "tiddlers": [...] // Array of literature tiddler objects
+ *   }
+ * 
+ *   Error:
+ *   {
+ *     "status": "error",
+ *     "code": 400,
+ *     "message": "Error retrieving latest literatures: [error details]"
+ *   }
  * 
  * Workflow:
- *   1. Validates that the request contains a non-empty BibTeX string.
- *   2. Checks if the BibTeX plugin tiddler ($:/plugins/tiddlywiki/bibtex) exists.
- *   3. Deserializes the BibTeX string into tiddler objects.
- *   4. For each new tiddler:
- *      - Skips if title is missing or already exists.
- *      - Adds "bibtex-entry" tag and author tags (if DOI is present).
- *      - Sets created/modified timestamps and attaches pdf_key from request.
- *      - Adds the tiddler to the wiki.
- *   5. Returns the created tiddlers in the response.
+ *   1. Extracts 'days' parameter from query string (defaults to 60 days if not provided)
+ *   2. Validates that days parameter is a positive integer
+ *   3. Calls authoring.getLatest(days) to retrieve recent literature entries
+ *   4. Returns the results with success status and metadata
  * 
  * Error Handling:
- *   - Returns 400 if BibTeX data is invalid, plugin tiddler is missing, or parsing fails.
- *   - Returns 400 with error message if an exception occurs.
+ *   - Returns 400 if an exception occurs during retrieval
+ *   - Logs errors to console for debugging
  * 
  * Dependencies:
- *   - $:/plugins/bangyou/tw-connector/api/authoring.js (for author tag extraction)
- *   - $:/plugins/tiddlywiki/bibtex (for BibTeX deserialization)
+ *   - $:/plugins/bangyou/tw-connector/api/authoring.js (Authoring API with getLatest method)
  * 
- * @module $:/plugins/bangyou/tw-connector/route/literature.js
- * @method POST
- * @route /^\/literatures$/
+ * @module $:/plugins/bangyou/tw-connector/route/literature/latest.js
+ * @method GET
+ * @route /^\/literatures\/latest$/
  * @platforms ["node"]
  * @param {Object} request - HTTP request object
- * @param {Object} response - HTTP response object
- * @param {Object} state - State object containing request data (state.data: BibTeX string)
+ * @param {Object} response - HTTP response object  
+ * @param {Object} state - State object containing query parameters (state.queryParameters.days)
  * @returns {void}
  */
 

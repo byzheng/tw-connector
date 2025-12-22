@@ -114,4 +114,18 @@ The field `researcherid` in the tiddlers with tag `Colleague` is used to to retr
 
 <$edit-text tiddler="$:/config/tw-connector/authoring/wos/daily-limit" default="5000" tag="input" />
 
+
 ----
+!! OpenAlex
+
+The field `openalex` in the tiddlers with tag `Colleague` is used to to retrieve author's publications. 
+
+<$link to="$:/config/tw-connector/authoring/openalex/enable">Retrieve Publication from OpenAlex</$link> 
+
+<$checkbox tiddler="$:/config/tw-connector/authoring/openalex/enable" field="text" checked="enable" unchecked="disable" default="enable"><$link to="$:/config/tw-connector/authoring/openalex/enable">Enable OpenAlex</$link></$checkbox>
+
+
+<$link to="$:/config/tw-connector/authoring/openalex/daily-limit">Daily Limit of API Requests</$link> 
+
+<$edit-text tiddler="$:/config/tw-connector/authoring/openalex/daily-limit" default="25000" tag="input" />
+
