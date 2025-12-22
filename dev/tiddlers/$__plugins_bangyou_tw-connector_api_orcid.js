@@ -85,9 +85,25 @@ ORCID utility for TiddlyWiki
             if (data && Array.isArray(data.group)) {
                 works = data.group.map(g => {
                     const workSummary = g['work-summary'] && g['work-summary'][0] ? g['work-summary'][0] : {};
-                    const doi = (workSummary.externalIds && workSummary.externalIds.externalId || [])
-                        .filter(eid => eid.externalIdType === "doi")
-                        .map(eid => eid.externalIdValue)[0] || "";
+                    const doi = (() => {
+                        // Try the first format (externalIds.externalId)
+                        if (workSummary.externalIds && workSummary.externalIds.externalId) {
+                            const doiFromFirst = workSummary.externalIds.externalId
+                                .filter(eid => eid.externalIdType === "doi")
+                                .map(eid => eid.externalIdValue)[0];
+                            if (doiFromFirst) return doiFromFirst;
+                        }
+                        
+                        // Try the second format (external-ids.external-id)
+                        if (workSummary['external-ids'] && workSummary['external-ids']['external-id']) {
+                            const doiFromSecond = workSummary['external-ids']['external-id']
+                                .filter(eid => eid['external-id-type'] === "doi")
+                                .map(eid => eid['external-id-value'])[0];
+                            if (doiFromSecond) return doiFromSecond;
+                        }
+                        
+                        return "";
+                    })();
                     return {
                         title: workSummary.title && workSummary.title.title && workSummary.title.title.value,
                         identifiers: { doi },
@@ -171,6 +187,65 @@ ORCID utility for TiddlyWiki
         function removeExpiredEntries() {
             cacheHelper.removeExpiredEntries();
         }
+
+        function getLatest(days = 90) {
+            if (!isEnabled()) {
+                return [];
+            }
+            
+            const works = cacheHelper.getCaches();
+            const cutoffDate = new Date();
+            cutoffDate.setDate(cutoffDate.getDate() - days);
+
+            const recentWorks = [];
+
+            for (const colleagueId in works) {
+                if (colleagueId === orcid_daily_request_count_key) {
+                    continue;
+                }
+                
+                if (Object.prototype.hasOwnProperty.call(works, colleagueId)) {
+                    const colleagueWorks = works[colleagueId];
+                    
+                    if (Array.isArray(colleagueWorks.item)) {
+                        for (const work of colleagueWorks.item) {
+                            if (!work || !work['publication-date']) {
+                                continue;
+                            }
+                            const pubDate = work['publication-date'];
+                            if (!pubDate.year || !pubDate.year.value) {
+                                continue;
+                            }
+                            if (!pubDate.month || !pubDate.month.value) {
+                                continue;
+                            }
+                            if (!pubDate.day || !pubDate.day.value) {
+                                continue;
+                            }
+                            const year = parseInt(pubDate.year.value);
+                            const month = parseInt(pubDate.month.value);
+                            const day = parseInt(pubDate.day.value);
+                            const workDate = new Date(year, month - 1, day);
+                            if (workDate < cutoffDate) {
+                                continue;
+                            }
+                            console.log(JSON.stringify(work, null, 2));
+                            recentWorks.push({
+                                colleagueId: colleagueId,
+                                // work: work,
+                                doi: (work.identifiers && work.identifiers.doi) ? work.identifiers.doi : "",
+                                title: work.title.title.value,
+                                publicationDate: workDate
+                            });
+                        }
+                    }
+                }
+            }
+
+            return recentWorks.sort((a, b) => b.publicationDate - a.publicationDate);
+            console.log(JSON.stringify(works, null, 2));
+            return works;
+        }
         return {
             isEnabled: isEnabled,
             cacheWorks: cacheWorks,
@@ -178,7 +253,8 @@ ORCID utility for TiddlyWiki
             getPlatformField: function () {
                 return platform_field;
             },
-            removeExpiredEntries: removeExpiredEntries
+            removeExpiredEntries: removeExpiredEntries,
+            getLatest: getLatest
         };
     }
 

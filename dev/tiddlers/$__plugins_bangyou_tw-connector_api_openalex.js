@@ -151,9 +151,6 @@ OpenAlex API utility for TiddlyWiki with timestamped caching
                 }))
             }));
             
-            
-            console.log(JSON.stringify(filteredWorks, null, 2));
-
             return filteredWorks;
 
         }
@@ -353,27 +350,12 @@ OpenAlex API utility for TiddlyWiki with timestamped caching
             return cached?.item || [];
         }
 
-        function getLatest(openalexId, limit = 10) {
+        function getLatest(days = 90) {
             if (!isEnabled()) {
                 return [];
             }
-            if (!openalexId) {
-                throw new Error("Invalid OpenAlex ID");
-            }
-            openalexId = extractOpenAlexId(openalexId);
-            if (!openalexId) {
-                throw new Error("Invalid OpenAlex ID format");
-            }
-            const works = getWorks(openalexId);
-            if (!works || !Array.isArray(works) || works.length === 0) {
-                return [];
-            }
-            // Sort by year descending (most recent first) and limit results
-            const sorted = works
-                .filter(work => work && work.year)
-                .sort((a, b) => (b.year || 0) - (a.year || 0))
-                .slice(0, limit);
-            return sorted;
+            
+            return [];
         }
 
         function getAuthorByDOI(doi) {
