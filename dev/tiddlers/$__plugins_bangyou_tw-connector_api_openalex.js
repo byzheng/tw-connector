@@ -350,12 +350,59 @@ OpenAlex API utility for TiddlyWiki with timestamped caching
             return cached?.item || [];
         }
 
+        
+        // Get latest works within the past 'days' days
         function getLatest(days = 90) {
             if (!isEnabled()) {
                 return [];
             }
             
-            return [];
+            const works = cacheHelper.getCaches();
+            const cutoffDate = new Date();
+            cutoffDate.setDate(cutoffDate.getDate() - days);
+            const recentWorks = [];
+
+            for (const colleagueId in works) {
+                if (colleagueId === openalex_daily_request_count_key) {
+                    continue;
+                }
+                
+                if (!Object.prototype.hasOwnProperty.call(works, colleagueId)) {
+                    continue;
+                }
+                const colleagueWorks = works[colleagueId];
+                if (!Array.isArray(colleagueWorks.item)) {
+                    continue;
+                }
+            
+                for (const work of colleagueWorks.item) {
+                    if (!work || !work['publication_date']) {
+                        continue;
+                    }
+                    const pubDate = work['publication_date'];
+                    // Parse month and year from strings (e.g., "AUG 25" and "2025")
+                    const workDate = new Date(pubDate);
+                    console.log(`Work date: ${workDate.toISOString().slice(0,10)}`);
+                    if (workDate < cutoffDate) {
+                        continue;
+                    }
+                    
+                    if (!work.doi || work.doi === "") {
+                        continue;
+                    }
+                    const doi = work.doi;
+                    recentWorks.push({
+                        colleagueId: colleagueId,
+                        // work: work,
+                        doi: doi,
+                        title: work.title ? work.title : "",
+                        publicationDate: workDate,
+                        platform: "OpenAlex" 
+                    });
+                }
+            }
+
+            return recentWorks;
         }
 
         function getAuthorByDOI(doi) {

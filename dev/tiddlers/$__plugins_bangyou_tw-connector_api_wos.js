@@ -189,6 +189,7 @@ Web of Science utility for TiddlyWiki
             cacheHelper.removeExpiredEntries();
         }
 
+        // Get latest works within the past 'days' days
         function getLatest(days = 90) {
             if (!isEnabled()) {
                 return [];
