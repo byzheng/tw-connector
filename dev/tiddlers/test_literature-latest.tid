@@ -1,8 +1,11 @@
 created: 20251222235548982
-modified: 20251223081157998
+modified: 20251223230707009
 tags: 
 title: test/literature-latest
 type: text/vnd.tiddlywiki
 
+<span class="py-count"><$literatures-latest days=10 count/></span>
+
 <span class="py-count"><$literatures-latest days=365 count/></span>
+
 <$literatures-latest days=365/>

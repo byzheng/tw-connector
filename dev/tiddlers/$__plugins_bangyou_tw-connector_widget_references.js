@@ -68,7 +68,7 @@ Reference widget for TiddlyWiki
                 return response.json(); // parse the response body
             })
             .then(results => {
-                var innerHTML = literature.card(results);
+                var innerHTML = literature.cardFromDOIs(results.data);
                 containerDom.appendChild(innerHTML);
             })
             .catch(err => {

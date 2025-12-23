@@ -16,11 +16,11 @@ Get reference list for a tiddler
 	/*global $tw: false */
 	"use strict";
 	if ($tw.node) {
-		var openalex = require("$:/plugins/bangyou/tw-connector/api/openalex.js");
+		var crossref = require("$:/plugins/bangyou/tw-connector/api/crossref.js");
 	}
 	exports.method = "GET";
 	exports.platforms = ["node"];
-	exports.path = /^\/literature\/([^/]+)\/references$/;
+	exports.path = /^\/literature\/references\/([^/]+)$/;
 
 	exports.handler = function (request, response, state) {
 
@@ -37,8 +37,8 @@ Get reference list for a tiddler
 				console.log("Invalid DOI provided");
 				return;
 			}
-			const openalexAPI = new openalex.OpenAlex();
-			openalexAPI.references(doi).then((data) => {
+			const crossrefAPI = new crossref.Crossref();
+			crossrefAPI.getReferencesByDOI(doi).then((data) => {
 				response.writeHead(200, { "Content-Type": "application/json" });
 				response.end(JSON.stringify({
 					"status": "success",

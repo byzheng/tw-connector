@@ -86,9 +86,37 @@ Crossref API utility for TiddlyWiki
             return platform_field;
         }
 
+        async function getReferencesByDOI(doi) {
+            const work = await getWorksByDOI(doi);
+            
+            if (!work || !work.message || !work.message['reference']) {
+                return [];
+            }
+            const references = work.message['reference'];
+            return references.map(ref => {
+                // Create a copy of the reference object
+                const processedRef = { ...ref };
+                
+                // Rename DOI to doi if it exists
+                if (processedRef.DOI) {
+                    processedRef.doi = processedRef.DOI;
+                    delete processedRef.DOI;
+                }
+                
+                // Rename article-title to title if it exists
+                if (processedRef['article-title']) {
+                    processedRef.title = processedRef['article-title'];
+                    delete processedRef['article-title'];
+                }
+                
+                return processedRef;
+            });
+        }
+
         return {
             isEnabled: isEnabled,
             getWorksByDOI: getWorksByDOI,
+            getReferencesByDOI: getReferencesByDOI,
             removeExpiredEntries: removeExpiredEntries,
             getPlatformField: getPlatformField
         };

@@ -54,15 +54,15 @@ Reference widget for TiddlyWiki
             .then(results => {
                 var innerHTML;
                 if (count) {
-                    if (results.items.length > 0) {
-                        const countDiv = document.createElement('span');
-                        countDiv.textContent = results.items.length;
-                        innerHTML = countDiv;
-                    }
+                    const countDiv = document.createElement('span');
+                    countDiv.textContent = results.items.length;
+                    innerHTML = countDiv;
                 } else {
                     innerHTML = literature.cardFromDOIs(results.items);
                 }
-                containerDom.appendChild(innerHTML);
+                if (innerHTML) {
+                    containerDom.appendChild(innerHTML);
+                }
             })
             .catch(err => {
                 if (err) { // only show message if not already handled

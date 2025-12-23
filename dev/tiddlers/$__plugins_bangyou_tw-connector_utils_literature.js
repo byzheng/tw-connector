@@ -160,7 +160,6 @@ function Literature() {
             emptyState.innerHTML = `
                 <div class="tw-literature-empty-icon">📚</div>
                 <h3 class="tw-literature-empty-title">No references found</h3>
-                <p class="tw-literature-empty-subtitle">Try adjusting your search criteria</p>
             `;
             result.appendChild(emptyState);
             return result;
