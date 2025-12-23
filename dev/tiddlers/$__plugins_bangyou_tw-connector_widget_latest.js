@@ -36,11 +36,13 @@ Reference widget for TiddlyWiki
     ReferencesWidget.prototype.render = function (parent, nextSibling) {
         this.parentDomNode = parent;
         this.computeAttributes();
-
+        this.uuid = (Math.random() + 1).toString(36).substring(3);
         var containerDom = document.createElement('div');
+        containerDom.id = this.uuid;
         parent.insertBefore(containerDom, nextSibling);
 
         var days = this.getAttribute("days") || 90;
+        const count = this.getAttribute("count") || false;
         fetch(`/literatures/latest?days=${days}`)
             .then(response => {
                 if (!response.ok) {
@@ -50,7 +52,16 @@ Reference widget for TiddlyWiki
                 return response.json(); // parse the response body
             })
             .then(results => {
-                var innerHTML = literature.cardFromDOIs(results.items);
+                var innerHTML;
+                if (count) {
+                    if (results.items.length > 0) {
+                        const countDiv = document.createElement('span');
+                        countDiv.textContent = results.items.length;
+                        innerHTML = countDiv;
+                    }
+                } else {
+                    innerHTML = literature.cardFromDOIs(results.items);
+                }
                 containerDom.appendChild(innerHTML);
             })
             .catch(err => {
@@ -61,9 +72,43 @@ Reference widget for TiddlyWiki
 
     };
 
+    ReferencesWidget.prototype.refresh = function (changedTiddlers) {
+        console.log(changedTiddlers);
+        
+        // Go through changedTiddlers to check if any has tag 'bibtex-entry' and is not a draft
+        for (let tiddlerTitle in changedTiddlers) {
+            // Skip system tiddlers
+            if (tiddlerTitle.startsWith("$:/")) {
+                continue;
+            }
+            // Skip draft tiddlers
+            if (tiddlerTitle.startsWith("Draft of ")) {
+                continue;
+            }
+            // Get the tiddler object
+            let tiddler = $tw.wiki.getTiddler(tiddlerTitle);
+            // If tiddler doesn't exist or has no fields, skip
+            if (!tiddler || !tiddler.fields || !tiddler.fields.tags) {
+                continue;
+            }
+            // Check if tiddler has the 'bibtex-entry' tag
+            let tags = tiddler.fields.tags || "";
+            let hasBibtexTag = tags.includes("bibtex-entry");
+            
+            if (hasBibtexTag) {
+                if (this.uuid) {
+                    var element = document.getElementById(this.uuid);
+                    element.parentNode.removeChild(element);
+                }
+                this.refreshSelf();
+                return true;
+            }
+        }
+        
+        return false;
+    };
 
-
-    exports["literatureslatest"] = ReferencesWidget;
+    exports["literatures-latest"] = ReferencesWidget;
 
 
 

@@ -232,10 +232,15 @@ ORCID utility for TiddlyWiki
                             if (workDate < cutoffDate) {
                                 continue;
                             }
+                            
+                            if (!work.identifiers || !work.identifiers.doi || work.identifiers.doi === "") {
+                                continue;
+                            }
+                            const doi = work.identifiers.doi;
                             recentWorks.push({
                                 colleagueId: colleagueId,
                                 // work: work,
-                                doi: (work.identifiers && work.identifiers.doi) ? work.identifiers.doi : "",
+                                doi: doi,
                                 title: work.title.title.value ? work.title.title.value : "",
                                 publicationDate: workDate,
                                 journalTitle: work['journal-title'] ? work['journal-title'].value : "",

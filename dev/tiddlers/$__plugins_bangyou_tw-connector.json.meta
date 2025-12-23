@@ -3,11 +3,11 @@ core-version: >5.1.23
 created: 20241208234130793
 description: A small plugin for Chrome Extension PubConnector
 list: readme license settings
-modified: 20251223034033391
+modified: 20251223051046122
 name: TW-Connector
 plugin-draft: plugin
 source: https://tw-connector.bangyou.me
 tags: 
 title: $:/plugins/bangyou/tw-connector
 type: application/json
-version: 0.3.2
+version: 0.3.6
