@@ -73,8 +73,7 @@ Reference widget for TiddlyWiki
     };
 
     ReferencesWidget.prototype.refresh = function (changedTiddlers) {
-        console.log(changedTiddlers);
-        
+
         // Go through changedTiddlers to check if any has tag 'bibtex-entry' and is not a draft
         for (let tiddlerTitle in changedTiddlers) {
             // Skip system tiddlers

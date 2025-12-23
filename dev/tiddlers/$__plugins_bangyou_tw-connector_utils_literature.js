@@ -134,6 +134,8 @@ function Literature() {
         return result;
     }
 
+    const crossrefCache = new Map();
+
     function cardFromDOIs(items) {
         let result = document.createElement('div');
         result.className = "tw-literature-list";
@@ -189,18 +191,30 @@ function Literature() {
             (async (currentItem, currentRefItem, currentDoiLink, currentTitleItem, currentAuthorsDiv) => {
                 try {
                     const cleanDoi = currentItem.doi.replace('https://doi.org/', '').replace('http://doi.org/', '');
-                    const response = await fetch(`literature/crossref/${encodeURIComponent(cleanDoi)}`);
+
+                    let crossrefData;
                     
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
+                    // Check if data is already cached
+                    if (crossrefCache.has(cleanDoi)) {
+                        crossrefData = crossrefCache.get(cleanDoi);
+                    } else {
+                        const response = await fetch(`literature/crossref/${encodeURIComponent(cleanDoi)}`);
+                        
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        
+                        crossrefData = await response.json();
+                        if (!crossrefData || !crossrefData.data || !crossrefData.data.message) {
+                            throw new Error('Invalid crossref response structure');
+                        }
+                        
+                        // Cache the successful response
+                        crossrefCache.set(cleanDoi, crossrefData);
                     }
+
                     
-                    const crossref = await response.json();
-                    if (!crossref || !crossref.data || !crossref.data.message) {
-                        throw new Error('Invalid crossref response structure');
-                    }
-                    
-                    const data = crossref.data.message;
+                    const data = crossrefData.data.message;
                     
                     // Clear the existing simple structure and rebuild with rich content
                     currentRefItem.innerHTML = '';
@@ -231,7 +245,7 @@ function Literature() {
                     titleLink.target = '_blank';
                     titleLink.rel = 'noopener noreferrer';
                     titleLink.className = 'tw-literature-title-link';
-                    titleLink.textContent = data.title?.[0] || currentItem.title || 'No title available';
+                    titleLink.innerHTML = data.title?.[0] || currentItem.title || 'No title available';
                     
                     titleElement.appendChild(titleLink);
                     titleSection.appendChild(titleElement);
