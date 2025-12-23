@@ -50,7 +50,7 @@ Reference widget for TiddlyWiki
                 return response.json(); // parse the response body
             })
             .then(results => {
-                var innerHTML = literature.card(results.items);
+                var innerHTML = literature.cardFromDOIs(results.items);
                 containerDom.appendChild(innerHTML);
             })
             .catch(err => {

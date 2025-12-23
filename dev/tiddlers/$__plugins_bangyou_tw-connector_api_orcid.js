@@ -232,7 +232,6 @@ ORCID utility for TiddlyWiki
                             if (workDate < cutoffDate) {
                                 continue;
                             }
-                            console.log(JSON.stringify(work, null, 2));
                             recentWorks.push({
                                 colleagueId: colleagueId,
                                 // work: work,
