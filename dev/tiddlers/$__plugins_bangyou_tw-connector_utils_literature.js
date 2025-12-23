@@ -110,18 +110,32 @@ function Literature() {
 
             let authorsEle = []
             if (Array.isArray(item.authorships) && item.authorships.length > 0) {
-                for (const author of item.authorships) {
+                const maxAuthors = 5;
+                const authorsToShow = item.authorships.slice(0, maxAuthors);
+                
+                for (const author of authorsToShow) {
                     const authorSpan = document.createElement('span');
                     authorSpan.className = "tw-literature-author";
                     authorSpan.textContent = author.author.display_name || "Unknown Author";
                     authorsEle.push(authorSpan);
                 }
+                
                 authorsEle.forEach((el, idx) => {
                     authorsDiv.appendChild(el);
                     if (idx < authorsEle.length - 1) {
                         authorsDiv.appendChild(document.createTextNode(', '));
                     }
                 });
+                
+                // Add "and X more" if there are more than maxAuthors
+                if (item.authorships.length > maxAuthors) {
+                    const moreSpan = document.createElement('span');
+                    moreSpan.className = "tw-literature-author-more";
+                    moreSpan.textContent = ` and ${item.authorships.length - maxAuthors} more`;
+                    moreSpan.style.fontStyle = 'italic';
+                    moreSpan.style.color = '#64748b';
+                    authorsDiv.appendChild(moreSpan);
+                }
 
             } else {
                 authorsDiv.textContent = "No authors available";
@@ -302,7 +316,10 @@ function Literature() {
                         authorsLabel.textContent = 'Authors:';
                         authorsContainer.appendChild(authorsLabel);
                         
-                        data.author.forEach((author, index) => {
+                        const maxAuthors = 5;
+                        const authorsToShow = data.author.slice(0, maxAuthors);
+                        
+                        authorsToShow.forEach((author, index) => {
                             const authorSpan = document.createElement('span');
                             authorSpan.className = 'tw-literature-author-chip';
                             const authorName = `${author.given || ''} ${author.family || ''}`.trim();
@@ -318,6 +335,16 @@ function Literature() {
                             
                             authorsContainer.appendChild(authorSpan);
                         });
+                        
+                        // Add "and X more" if there are more than maxAuthors
+                        if (data.author.length > maxAuthors) {
+                            const moreSpan = document.createElement('span');
+                            moreSpan.className = 'tw-literature-author-more';
+                            moreSpan.textContent = ` and ${data.author.length - maxAuthors} more`;
+                            moreSpan.style.fontStyle = 'italic';
+                            moreSpan.style.color = '#64748b';
+                            authorsContainer.appendChild(moreSpan);
+                        }
                         
                         authorsSection.appendChild(authorsContainer);
                     }

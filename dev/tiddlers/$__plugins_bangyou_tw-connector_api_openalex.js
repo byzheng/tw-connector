@@ -382,7 +382,7 @@ OpenAlex API utility for TiddlyWiki with timestamped caching
                     const pubDate = work['publication_date'];
                     // Parse month and year from strings (e.g., "AUG 25" and "2025")
                     const workDate = new Date(pubDate);
-                    console.log(`Work date: ${workDate.toISOString().slice(0,10)}`);
+                    
                     if (workDate < cutoffDate) {
                         continue;
                     }
