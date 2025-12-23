@@ -77,8 +77,16 @@ function Literature() {
     function cardFromDOIs(items) {
         let result = document.createElement('div');
         result.className = "tw-literature-list";
+        
         if (!Array.isArray(items) || items.length === 0) {
-            result.innerHTML = "No references found.";
+            const emptyState = document.createElement('div');
+            emptyState.className = 'tw-literature-empty-state';
+            emptyState.innerHTML = `
+                <div class="tw-literature-empty-icon">📚</div>
+                <h3 class="tw-literature-empty-title">No references found</h3>
+                <p class="tw-literature-empty-subtitle">Try adjusting your search criteria</p>
+            `;
+            result.appendChild(emptyState);
             return result;
         }
 
@@ -124,8 +132,7 @@ function Literature() {
             console.log(`Starting async fetch for DOI: ${item.doi}`);
             
             // Fetch data from crossref API (this is async and won't block the loop)
-            // Use an immediately invoked async function to ensure complete isolation
-            (async (currentItem, currentRefItem, currentDoiLink) => {
+            (async (currentItem, currentRefItem, currentDoiLink, currentTitleItem, currentAuthorsDiv) => {
                 try {
                     const cleanDoi = currentItem.doi.replace('https://doi.org/', '').replace('http://doi.org/', '');
                     console.log(`Fetching crossref data for DOI: ${cleanDoi}`);
@@ -139,73 +146,166 @@ function Literature() {
                     const crossref = await response.json();
                     console.log(`Successfully fetched data for DOI: ${cleanDoi}`, crossref);
                     
-                    if (!crossref || !crossref.data) {
-                        throw new Error('No data found in crossref response');
-                    }
-                    let crossrefData = crossref.data;
-
-                    if (!crossrefData.message) {
-                        throw new Error('No message field in crossref data');
-                    }
-                    crossrefData = crossrefData.message;
-                    // Update title with fetched data
-                    if (crossrefData.title && crossrefData.title[0]) {
-                        currentDoiLink.innerHTML = crossrefData.title[0];
+                    if (!crossref || !crossref.data || !crossref.data.message) {
+                        throw new Error('Invalid crossref response structure');
                     }
                     
-                    // Update authors if available
-                    if (crossrefData.author && crossrefData.author.length > 0) {
-                        const authorsDiv = currentRefItem.querySelector('.literature-authors');
-                        if (authorsDiv) {
-                            authorsDiv.innerHTML = ''; // Clear existing content
-                            const authorNames = crossrefData.author.map(author => 
-                                `${author.given || ''} ${author.family || ''}`.trim()
-                            ).filter(name => name.length > 0);
+                    const data = crossref.data.message;
+                    
+                    // Clear the existing simple structure and rebuild with rich content
+                    currentRefItem.innerHTML = '';
+                    
+                    // Create status badge
+                    const statusBadge = document.createElement('div');
+                    statusBadge.className = 'tw-literature-status-badge';
+                    statusBadge.textContent = 'Published';
+                    currentRefItem.appendChild(statusBadge);
+                    
+                    // Create main content container
+                    const contentContainer = document.createElement('div');
+                    contentContainer.className = 'tw-literature-content';
+                    
+                    // Title section
+                    const titleSection = document.createElement('div');
+                    titleSection.className = 'tw-literature-title-section';
+                    
+                    const titleElement = document.createElement('h3');
+                    titleElement.className = 'tw-literature-title';
+                    
+                    const titleLink = document.createElement('a');
+                    titleLink.href = currentItem.doi.startsWith('https://') ? currentItem.doi : `https://doi.org/${currentItem.doi}`;
+                    titleLink.target = '_blank';
+                    titleLink.rel = 'noopener noreferrer';
+                    titleLink.className = 'tw-literature-title-link';
+                    titleLink.textContent = data.title?.[0] || currentItem.title || 'No title available';
+                    
+                    titleElement.appendChild(titleLink);
+                    titleSection.appendChild(titleElement);
+                    
+                    // DOI badge
+                    const doiBadge = document.createElement('span');
+                    doiBadge.className = 'tw-literature-doi-badge';
+                    doiBadge.textContent = `DOI: ${cleanDoi}`;
+                    titleSection.appendChild(doiBadge);
+                    
+                    contentContainer.appendChild(titleSection);
+                    
+                    // Authors section
+                    const authorsSection = document.createElement('div');
+                    authorsSection.className = 'tw-literature-authors-section';
+                    
+                    if (data.author && data.author.length > 0) {
+                        const authorsContainer = document.createElement('div');
+                        authorsContainer.className = 'tw-literature-authors-container';
+                        
+                        const authorsLabel = document.createElement('span');
+                        authorsLabel.className = 'tw-literature-authors-label';
+                        authorsLabel.textContent = 'Authors:';
+                        authorsContainer.appendChild(authorsLabel);
+                        
+                        data.author.forEach((author, index) => {
+                            const authorSpan = document.createElement('span');
+                            authorSpan.className = 'tw-literature-author-chip';
+                            const authorName = `${author.given || ''} ${author.family || ''}`.trim();
                             
-                            if (authorNames.length > 0) {
-                                authorsDiv.textContent = authorNames.join(', ');
+                            if (author.ORCID) {
+                                authorSpan.innerHTML = `
+                                    ${authorName}
+                                    <a href="${author.ORCID}" target="_blank" class="tw-literature-author-orcid">🆔</a>
+                                `;
                             } else {
-                                authorsDiv.textContent = "No authors available";
+                                authorSpan.textContent = authorName;
                             }
-                        }
+                            
+                            authorsContainer.appendChild(authorSpan);
+                        });
+                        
+                        authorsSection.appendChild(authorsContainer);
                     }
                     
-                    // Add publication year if available
-                    if (crossrefData['published-print'] || crossrefData['published-online']) {
-                        const pubDate = crossrefData['published-print'] || crossrefData['published-online'];
-                        if (pubDate['date-parts'] && pubDate['date-parts'][0]) {
-                            const year = pubDate['date-parts'][0][0];
-                            const yearSpan = document.createElement('span');
-                            yearSpan.className = "tw-literature-year";
-                            yearSpan.textContent = ` (${year})`;
-                            currentDoiLink.parentElement.appendChild(yearSpan);
-                        }
+                    contentContainer.appendChild(authorsSection);
+                    
+                    // Journal and publication info
+                    const journalSection = document.createElement('div');
+                    journalSection.className = 'tw-literature-journal-section';
+                    
+                    if (data['container-title']?.[0]) {
+                        const journalName = document.createElement('span');
+                        journalName.className = 'tw-literature-journal-name';
+                        journalName.textContent = data['container-title'][0];
+                        journalSection.appendChild(journalName);
                     }
                     
-                    // Add journal name if available
-                    if (crossrefData['container-title'] && crossrefData['container-title'][0]) {
-                        let journalDiv = currentRefItem.querySelector('.literature-journal');
-                        if (!journalDiv) {
-                            journalDiv = document.createElement('div');
-                            journalDiv.className = "literature-journal";
-                            currentRefItem.appendChild(journalDiv);
-                        }
-                        journalDiv.innerHTML = `<em>${crossrefData['container-title'][0]}</em>`;
+                    if (data.publisher) {
+                        const publisherSpan = document.createElement('span');
+                        publisherSpan.className = 'tw-literature-publisher';
+                        publisherSpan.textContent = data.publisher;
+                        journalSection.appendChild(publisherSpan);
                     }
+                    
+                    const pubDate = data['published-online'] || data['published-print'] || data.published;
+                    if (pubDate?.['date-parts']?.[0]) {
+                        const year = pubDate['date-parts'][0][0];
+                        const month = pubDate['date-parts'][0][1];
+                        const dateSpan = document.createElement('span');
+                        dateSpan.className = 'tw-literature-date-badge';
+                        dateSpan.textContent = month ? `${year}-${month.toString().padStart(2, '0')}` : year;
+                        journalSection.appendChild(dateSpan);
+                    }
+                    
+                    contentContainer.appendChild(journalSection);
+                    
+                    // Footer with additional info
+                    const footer = document.createElement('div');
+                    footer.className = 'tw-literature-footer';
+                    
+                    const leftInfo = document.createElement('div');
+                    leftInfo.className = 'tw-literature-footer-left';
+                    
+                    if (data['reference-count']) {
+                        const refsSpan = document.createElement('span');
+                        refsSpan.textContent = `📚 ${data['reference-count']} references`;
+                        leftInfo.appendChild(refsSpan);
+                    }
+                    
+                    if (data['is-referenced-by-count']) {
+                        const citedSpan = document.createElement('span');
+                        citedSpan.textContent = `📈 Cited ${data['is-referenced-by-count']} times`;
+                        leftInfo.appendChild(citedSpan);
+                    }
+                    
+                    footer.appendChild(leftInfo);
+                    
+                    const rightInfo = document.createElement('div');
+                    const sourceSpan = document.createElement('span');
+                    sourceSpan.textContent = '🔗 Crossref';
+                    rightInfo.appendChild(sourceSpan);
+                    footer.appendChild(rightInfo);
+                    
+                    contentContainer.appendChild(footer);
+                    currentRefItem.appendChild(contentContainer);
                     
                 } catch (error) {
                     console.warn(`Failed to fetch crossref data for DOI ${currentItem.doi}:`, error);
-                    // Keep the original title or show error message for this specific item
-                    if (currentDoiLink.innerHTML === "Loading...") {
-                        currentDoiLink.innerHTML = currentItem.title || "No title available";
-                    }
-                    // Set fallback authors
-                    const authorsDiv = currentRefItem.querySelector('.literature-authors');
-                    if (authorsDiv && !authorsDiv.textContent) {
-                        authorsDiv.textContent = "Authors not available";
-                    }
+                    
+                    // Create fallback card design
+                    currentRefItem.innerHTML = '';
+                    
+                    const fallbackContent = document.createElement('div');
+                    fallbackContent.className = 'tw-literature-fallback';
+                    fallbackContent.innerHTML = `
+                        <div class="tw-literature-fallback-icon">📄</div>
+                        <h3 class="tw-literature-fallback-title">${currentItem.title || 'No title available'}</h3>
+                        <p class="tw-literature-fallback-subtitle">Unable to load additional details</p>
+                        <a href="${currentItem.doi.startsWith('https://') ? currentItem.doi : `https://doi.org/${currentItem.doi}`}" 
+                           target="_blank" 
+                           class="tw-literature-fallback-button">
+                            View DOI
+                        </a>
+                    `;
+                    currentRefItem.appendChild(fallbackContent);
                 }
-            })(item, refItem, doiLink); // Pass current loop variables to avoid closure issues
+            })(item, refItem, doiLink, titleItem, authorsDiv);
 
             console.log(`Completed DOM setup for item ${items.indexOf(item) + 1}, continuing to next item...`);
         }
