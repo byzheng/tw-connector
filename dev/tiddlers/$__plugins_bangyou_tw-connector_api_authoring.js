@@ -214,6 +214,12 @@ module-type: library
                     console.error(`Error processing platform ${platform.constructor.name}:`, error);
                 }
             }
+            // Sort all items by publication date in descending order (newest first)
+            allItems.sort((a, b) => {
+                const dateA = a.publicationDate || new Date(0);
+                const dateB = b.publicationDate || new Date(0);
+                return dateB - dateA;
+            });
             return allItems;
         }
 
