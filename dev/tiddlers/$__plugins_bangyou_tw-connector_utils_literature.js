@@ -315,9 +315,11 @@ function Literature() {
                     if (pubDate?.['date-parts']?.[0]) {
                         const year = pubDate['date-parts'][0][0];
                         const month = pubDate['date-parts'][0][1];
+                        const day = pubDate['date-parts'][0][2];
+                        
                         const dateSpan = document.createElement('span');
                         dateSpan.className = 'tw-literature-date-badge';
-                        dateSpan.textContent = month ? `${year}-${month.toString().padStart(2, '0')}` : year;
+                        dateSpan.textContent = month ? `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}` : year;
                         journalSection.appendChild(dateSpan);
                     }
                     
@@ -346,7 +348,7 @@ function Literature() {
                     
                     const rightInfo = document.createElement('div');
                     const sourceSpan = document.createElement('span');
-                    sourceSpan.textContent = '🔗 Crossref';
+                    sourceSpan.textContent = `🔗 ${item.platform}`;
                     rightInfo.appendChild(sourceSpan);
                     footer.appendChild(rightInfo);
                     

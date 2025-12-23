@@ -188,6 +188,66 @@ Web of Science utility for TiddlyWiki
         function removeExpiredEntries() {
             cacheHelper.removeExpiredEntries();
         }
+
+        function getLatest(days = 90) {
+            if (!isEnabled()) {
+                return [];
+            }
+            
+            const works = cacheHelper.getCaches();
+            const cutoffDate = new Date();
+            cutoffDate.setDate(cutoffDate.getDate() - days);
+
+            const recentWorks = [];
+
+            for (const colleagueId in works) {
+                if (colleagueId === wos_daily_request_count_key) {
+                    continue;
+                }
+                
+                if (!Object.prototype.hasOwnProperty.call(works, colleagueId)) {
+                    continue;
+                }
+                const colleagueWorks = works[colleagueId];
+                if (!Array.isArray(colleagueWorks.item)) {
+                    continue;
+                }
+                for (const work of colleagueWorks.item) {
+                    if (!work || !work['source']) {
+                        continue;
+                    }
+                    const pubDate = work['source'];
+                    if (!pubDate.publishYear) {
+                        continue;
+                    }
+                    if (!pubDate.publishMonth) {
+                        continue;
+                    }
+                    const year = pubDate.publishYear;
+                    const month = pubDate.publishMonth;
+                    // Parse month and year from strings (e.g., "AUG 25" and "2025")
+                    const workDate = new Date(`${month}, ${year}`);
+                    if (workDate < cutoffDate) {
+                        continue;
+                    }
+                    
+                    if (!work.identifiers || !work.identifiers.doi || work.identifiers.doi === "") {
+                        continue;
+                    }
+                    const doi = work.identifiers.doi;
+                    recentWorks.push({
+                        colleagueId: colleagueId,
+                        // work: work,
+                        doi: doi,
+                        title: work.title ? work.title : "",
+                        publicationDate: workDate,
+                        platform: "Web of Science" 
+                    });
+                }
+            }
+
+            return recentWorks;
+        }
         return {
             isEnabled: isEnabled,
             cacheWorks: cacheWorks,
@@ -195,7 +255,8 @@ Web of Science utility for TiddlyWiki
             getPlatformField: function () {
                 return platform_field;
             },
-            removeExpiredEntries: removeExpiredEntries
+            removeExpiredEntries: removeExpiredEntries,
+            getLatest: getLatest
         };
 
     }

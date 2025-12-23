@@ -207,47 +207,49 @@ ORCID utility for TiddlyWiki
                     continue;
                 }
                 
-                if (Object.prototype.hasOwnProperty.call(works, colleagueId)) {
-                    const colleagueWorks = works[colleagueId];
+                if (!Object.prototype.hasOwnProperty.call(works, colleagueId)) {
+                    continue;
+                }
+                const colleagueWorks = works[colleagueId];
                     
-                    if (Array.isArray(colleagueWorks.item)) {
-                        for (const work of colleagueWorks.item) {
-                            if (!work || !work['publication-date']) {
-                                continue;
-                            }
-                            const pubDate = work['publication-date'];
-                            if (!pubDate.year || !pubDate.year.value) {
-                                continue;
-                            }
-                            if (!pubDate.month || !pubDate.month.value) {
-                                continue;
-                            }
-                            if (!pubDate.day || !pubDate.day.value) {
-                                continue;
-                            }
-                            const year = parseInt(pubDate.year.value);
-                            const month = parseInt(pubDate.month.value);
-                            const day = parseInt(pubDate.day.value);
-                            const workDate = new Date(year, month - 1, day);
-                            if (workDate < cutoffDate) {
-                                continue;
-                            }
-                            
-                            if (!work.identifiers || !work.identifiers.doi || work.identifiers.doi === "") {
-                                continue;
-                            }
-                            const doi = work.identifiers.doi;
-                            recentWorks.push({
-                                colleagueId: colleagueId,
-                                // work: work,
-                                doi: doi,
-                                title: work.title.title.value ? work.title.title.value : "",
-                                publicationDate: workDate,
-                                journalTitle: work['journal-title'] ? work['journal-title'].value : "",
-                                platform: "orcid" 
-                            });
-                        }
+                if (!Array.isArray(colleagueWorks.item)) {
+                    continue;
+                }
+                for (const work of colleagueWorks.item) {
+                    if (!work || !work['publication-date']) {
+                        continue;
                     }
+                    const pubDate = work['publication-date'];
+                    if (!pubDate.year || !pubDate.year.value) {
+                        continue;
+                    }
+                    if (!pubDate.month || !pubDate.month.value) {
+                        continue;
+                    }
+                    if (!pubDate.day || !pubDate.day.value) {
+                        continue;
+                    }
+                    const year = parseInt(pubDate.year.value);
+                    const month = parseInt(pubDate.month.value);
+                    const day = parseInt(pubDate.day.value);
+                    const workDate = new Date(year, month - 1, day);
+                    if (workDate < cutoffDate) {
+                        continue;
+                    }
+                    
+                    if (!work.identifiers || !work.identifiers.doi || work.identifiers.doi === "") {
+                        continue;
+                    }
+                    const doi = work.identifiers.doi;
+                    recentWorks.push({
+                        colleagueId: colleagueId,
+                        // work: work,
+                        doi: doi,
+                        title: work.title.title.value ? work.title.title.value : "",
+                        publicationDate: workDate,
+                        journalTitle: work['journal-title'] ? work['journal-title'].value : "",
+                        platform: "ORCID" 
+                    });
                 }
             }
 
