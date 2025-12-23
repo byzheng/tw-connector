@@ -12,6 +12,63 @@ Utils functions
 
 function Literature() {
 
+    function createReadButton(cleanDoi, currentRefItem) {
+        const readButton = document.createElement('button');
+        readButton.className = 'tw-literature-read-button';
+        readButton.innerHTML = '✕';
+        readButton.title = 'Mark as read';
+        readButton.addEventListener('click', async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (readButton.classList.contains('reading')) return;
+            
+            readButton.classList.add('reading');
+            readButton.innerHTML = '⌛';
+            readButton.title = 'Marking as read...';
+            
+            try {
+                const response = await fetch('/literature/mark-read', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ doi: cleanDoi })
+                });
+                
+                if (response.ok) {
+                    // Fade out the card
+                    currentRefItem.style.transition = 'all 0.5s ease';
+                    currentRefItem.style.opacity = '0.3';
+                    currentRefItem.style.transform = 'scale(0.95)';
+                    currentRefItem.style.pointerEvents = 'none';
+                    
+                    // Update button to show success
+                    readButton.innerHTML = '✓';
+                    readButton.title = 'Marked as read';
+                    readButton.style.background = '#d1fae5';
+                    readButton.style.color = '#059669';
+                    readButton.style.borderColor = '#10b981';
+                } else {
+                    throw new Error('Failed to mark as read');
+                }
+            } catch (error) {
+                console.error('Error marking item as read:', error);
+                readButton.classList.remove('reading');
+                readButton.innerHTML = '✕';
+                readButton.title = 'Mark as read (click to retry)';
+                
+                // Show error state briefly
+                readButton.style.background = '#fee2e2';
+                readButton.style.color = '#dc2626';
+                setTimeout(() => {
+                    readButton.style.background = '';
+                    readButton.style.color = '';
+                }, 2000);
+            }
+        });
+        return readButton;
+    }
+
 
     function card(items) {
         let result = document.createElement('div');
@@ -156,60 +213,7 @@ function Literature() {
                     currentRefItem.innerHTML = '';
                     
                     // Create read button
-                    const readButton = document.createElement('button');
-                    readButton.className = 'tw-literature-read-button';
-                    readButton.innerHTML = '✕';
-                    readButton.title = 'Mark as read';
-                    readButton.addEventListener('click', async (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        
-                        if (readButton.classList.contains('reading')) return;
-                        
-                        readButton.classList.add('reading');
-                        readButton.innerHTML = '⌛';
-                        readButton.title = 'Marking as read...';
-                        
-                        try {
-                            const response = await fetch('/literature/mark-read', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                },
-                                body: JSON.stringify({ doi: cleanDoi })
-                            });
-                            
-                            if (response.ok) {
-                                // Fade out the card
-                                currentRefItem.style.transition = 'all 0.5s ease';
-                                currentRefItem.style.opacity = '0.3';
-                                currentRefItem.style.transform = 'scale(0.95)';
-                                currentRefItem.style.pointerEvents = 'none';
-                                
-                                // Update button to show success
-                                readButton.innerHTML = '✓';
-                                readButton.title = 'Marked as read';
-                                readButton.style.background = '#d1fae5';
-                                readButton.style.color = '#059669';
-                                readButton.style.borderColor = '#10b981';
-                            } else {
-                                throw new Error('Failed to mark as read');
-                            }
-                        } catch (error) {
-                            console.error('Error marking item as read:', error);
-                            readButton.classList.remove('reading');
-                            readButton.innerHTML = '✕';
-                            readButton.title = 'Mark as read (click to retry)';
-                            
-                            // Show error state briefly
-                            readButton.style.background = '#fee2e2';
-                            readButton.style.color = '#dc2626';
-                            setTimeout(() => {
-                                readButton.style.background = '';
-                                readButton.style.color = '';
-                            }, 2000);
-                        }
-                    });
+                    const readButton = createReadButton(cleanDoi, currentRefItem);
                     currentRefItem.appendChild(readButton);
                     
                     // Create status badge
@@ -349,61 +353,8 @@ function Literature() {
                     currentRefItem.innerHTML = '';
                     
                     // Create read button for fallback case too
-                    const readButton = document.createElement('button');
-                    readButton.className = 'tw-literature-read-button';
-                    readButton.innerHTML = '✕';
-                    readButton.title = 'Mark as read';
-                    readButton.addEventListener('click', async (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        
-                        if (readButton.classList.contains('reading')) return;
-                        
-                        readButton.classList.add('reading');
-                        readButton.innerHTML = '⌛';
-                        readButton.title = 'Marking as read...';
-                        
-                        try {
-                            const cleanDoi = currentItem.doi.replace('https://doi.org/', '').replace('http://doi.org/', '');
-                            const response = await fetch('/literature/mark-read', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                },
-                                body: JSON.stringify({ doi: cleanDoi })
-                            });
-                            
-                            if (response.ok) {
-                                // Fade out the card
-                                currentRefItem.style.transition = 'all 0.5s ease';
-                                currentRefItem.style.opacity = '0.3';
-                                currentRefItem.style.transform = 'scale(0.95)';
-                                currentRefItem.style.pointerEvents = 'none';
-                                
-                                // Update button to show success
-                                readButton.innerHTML = '✓';
-                                readButton.title = 'Marked as read';
-                                readButton.style.background = '#d1fae5';
-                                readButton.style.color = '#059669';
-                                readButton.style.borderColor = '#10b981';
-                            } else {
-                                throw new Error('Failed to mark as read');
-                            }
-                        } catch (error) {
-                            console.error('Error marking item as read:', error);
-                            readButton.classList.remove('reading');
-                            readButton.innerHTML = '✕';
-                            readButton.title = 'Mark as read (click to retry)';
-                            
-                            // Show error state briefly
-                            readButton.style.background = '#fee2e2';
-                            readButton.style.color = '#dc2626';
-                            setTimeout(() => {
-                                readButton.style.background = '';
-                                readButton.style.color = '';
-                            }, 2000);
-                        }
-                    });
+                    const cleanDoi = currentItem.doi.replace('https://doi.org/', '').replace('http://doi.org/', '');
+                    const readButton = createReadButton(cleanDoi, currentRefItem);
                     currentRefItem.appendChild(readButton);
                     
                     const fallbackContent = document.createElement('div');
