@@ -148,16 +148,11 @@ function Literature() {
         }
 
         for (const item of items) {
-            console.log(`Processing item ${items.indexOf(item) + 1} of ${items.length}:`, item);
-            
             // Skip items without DOI early
             if (!item.doi) {
                 console.warn('Skipping item without DOI:', item);
                 continue;
             }
-
-            console.log(`Creating DOM elements for DOI: ${item.doi}`);
-
             const refItem = document.createElement('div');
             refItem.className = "tw-literature-item";
 
@@ -186,14 +181,11 @@ function Literature() {
             // Add to result immediately after creating the complete structure
             result.appendChild(refItem);
             
-            console.log(`Starting async fetch for DOI: ${item.doi}`);
             
             // Fetch data from crossref API (this is async and won't block the loop)
             (async (currentItem, currentRefItem, currentDoiLink, currentTitleItem, currentAuthorsDiv) => {
                 try {
                     const cleanDoi = currentItem.doi.replace('https://doi.org/', '').replace('http://doi.org/', '');
-                    console.log(`Fetching crossref data for DOI: ${cleanDoi}`);
-                    
                     const response = await fetch(`literature/crossref/${encodeURIComponent(cleanDoi)}`);
                     
                     if (!response.ok) {
@@ -201,8 +193,6 @@ function Literature() {
                     }
                     
                     const crossref = await response.json();
-                    console.log(`Successfully fetched data for DOI: ${cleanDoi}`, crossref);
-                    
                     if (!crossref || !crossref.data || !crossref.data.message) {
                         throw new Error('Invalid crossref response structure');
                     }
@@ -372,11 +362,8 @@ function Literature() {
                     currentRefItem.appendChild(fallbackContent);
                 }
             })(item, refItem, doiLink, titleItem, authorsDiv);
-
-            console.log(`Completed DOM setup for item ${items.indexOf(item) + 1}, continuing to next item...`);
         }
         
-        console.log(`Finished processing all ${items.length} items in the loop`);
         return result;
     }
     return {
