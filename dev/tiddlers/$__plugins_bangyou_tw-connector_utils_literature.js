@@ -153,9 +153,40 @@ function Literature() {
         }
 
         for (const item of items) {
-            // Skip items without DOI early
+            // Handle items without DOI with error card
             if (!item.doi) {
                 console.warn('Skipping item without DOI:', item);
+                
+                const refItem = document.createElement('div');
+                refItem.className = "tw-literature-item tw-literature-error";
+                
+                const errorContent = document.createElement('div');
+                errorContent.className = 'tw-literature-fallback';
+                errorContent.innerHTML = `
+                    <div class="tw-literature-fallback-icon">⚠️</div>
+                    <h3 class="tw-literature-fallback-title">${item.title || 'No title available'}</h3>
+                    <p class="tw-literature-fallback-subtitle">Missing DOI - Cannot load details</p>
+                `;
+                
+                // Add platform information to error case
+                const errorFooter = document.createElement('div');
+                errorFooter.className = 'tw-literature-footer';
+                
+                const errorLeftInfo = document.createElement('div');
+                errorLeftInfo.className = 'tw-literature-footer-left';
+                errorFooter.appendChild(errorLeftInfo);
+                
+                const errorRightInfo = document.createElement('div');
+                errorRightInfo.className = 'tw-literature-footer-right';
+                const sourceSpan = document.createElement('span');
+                sourceSpan.className = 'tw-literature-source-badge';
+                sourceSpan.textContent = `🔗 ${item.platform || 'Unknown'}`;
+                errorRightInfo.appendChild(sourceSpan);
+                errorFooter.appendChild(errorRightInfo);
+                errorContent.appendChild(errorFooter);
+                
+                refItem.appendChild(errorContent);
+                result.appendChild(refItem);
                 continue;
             }
             const refItem = document.createElement('div');
@@ -328,6 +359,8 @@ function Literature() {
                     // Footer with additional info
                     const footer = document.createElement('div');
                     footer.className = 'tw-literature-footer';
+                    footer.style.display = 'flex';
+                    footer.style.alignItems = 'center';
                     
                     const leftInfo = document.createElement('div');
                     leftInfo.className = 'tw-literature-footer-left';
@@ -347,7 +380,10 @@ function Literature() {
                     footer.appendChild(leftInfo);
                     
                     const rightInfo = document.createElement('div');
+                    rightInfo.className = 'tw-literature-footer-right';
+                    rightInfo.style.marginLeft = 'auto';
                     const sourceSpan = document.createElement('span');
+                    sourceSpan.className = 'tw-literature-source-badge';
                     sourceSpan.textContent = `🔗 ${item.platform}`;
                     rightInfo.appendChild(sourceSpan);
                     footer.appendChild(rightInfo);
@@ -378,6 +414,24 @@ function Literature() {
                             View DOI
                         </a>
                     `;
+                    
+                    // Add platform information to fallback
+                    const fallbackFooter = document.createElement('div');
+                    fallbackFooter.className = 'tw-literature-footer';
+                    
+                    const fallbackLeftInfo = document.createElement('div');
+                    fallbackLeftInfo.className = 'tw-literature-footer-left';
+                    fallbackFooter.appendChild(fallbackLeftInfo);
+                    
+                    const fallbackRightInfo = document.createElement('div');
+                    fallbackRightInfo.className = 'tw-literature-footer-right';
+                    const sourceSpan = document.createElement('span');
+                    sourceSpan.className = 'tw-literature-source-badge';
+                    sourceSpan.textContent = `🔗 ${currentItem.platform || 'Unknown'}`;
+                    fallbackRightInfo.appendChild(sourceSpan);
+                    fallbackFooter.appendChild(fallbackRightInfo);
+                    fallbackContent.appendChild(fallbackFooter);
+                    
                     currentRefItem.appendChild(fallbackContent);
                 }
             })(item, refItem, doiLink, titleItem, authorsDiv);
