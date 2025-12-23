@@ -36,11 +36,15 @@ function Literature() {
                 });
                 
                 if (response.ok) {
-                    // Fade out the card
+                    // Hide the refItem with smooth transition
                     currentRefItem.style.transition = 'all 0.5s ease';
-                    currentRefItem.style.opacity = '0.3';
+                    currentRefItem.style.opacity = '0';
                     currentRefItem.style.transform = 'scale(0.95)';
-                    currentRefItem.style.pointerEvents = 'none';
+                    
+                    // Completely hide the element after transition
+                    setTimeout(() => {
+                        currentRefItem.style.display = 'none';
+                    }, 500);
                     
                     // Update button to show success
                     readButton.innerHTML = '✓';
@@ -68,7 +72,6 @@ function Literature() {
         });
         return readButton;
     }
-
 
     function card(items) {
         let result = document.createElement('div');
