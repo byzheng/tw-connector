@@ -34,7 +34,7 @@ function Literature() {
             //titleItemSpan.innerHTML = result.title || "No title available";
             if (item.doi) {
                 const doiLink = document.createElement('a');
-                doiLink.href = item.doi;
+                doiLink.href = item.doi.startsWith('https://doi.org/') ? item.doi : `https://doi.org/${item.doi}`;
                 doiLink.target = "_blank";
                 doiLink.rel = "noopener noreferrer";
                 doiLink.className = "tw-literature-doi-link";

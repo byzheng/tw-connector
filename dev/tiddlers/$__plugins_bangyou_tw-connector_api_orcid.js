@@ -76,41 +76,44 @@ ORCID utility for TiddlyWiki
             }
             return response.json();
         }
-
+        // Get works for a given ORCID
         async function orcidWorksGet(orcid) {
             const url = buildORCIDApiUrl(orcid, "works");
             const data = await orcidRequest(url);
             // ORCID returns works in data.group
             let works = [];
-            if (data && Array.isArray(data.group)) {
-                works = data.group.map(g => {
-                    const workSummary = g['work-summary'] && g['work-summary'][0] ? g['work-summary'][0] : {};
-                    const doi = (() => {
-                        // Try the first format (externalIds.externalId)
-                        if (workSummary.externalIds && workSummary.externalIds.externalId) {
-                            const doiFromFirst = workSummary.externalIds.externalId
-                                .filter(eid => eid.externalIdType === "doi")
-                                .map(eid => eid.externalIdValue)[0];
-                            if (doiFromFirst) return doiFromFirst;
-                        }
-                        
-                        // Try the second format (external-ids.external-id)
-                        if (workSummary['external-ids'] && workSummary['external-ids']['external-id']) {
-                            const doiFromSecond = workSummary['external-ids']['external-id']
-                                .filter(eid => eid['external-id-type'] === "doi")
-                                .map(eid => eid['external-id-value'])[0];
-                            if (doiFromSecond) return doiFromSecond;
-                        }
-                        
-                        return "";
-                    })();
-                    return {
-                        title: workSummary.title && workSummary.title.title && workSummary.title.title.value,
-                        identifiers: { doi },
-                        ...workSummary
-                    };
-                });
+            if (!data || !Array.isArray(data.group)) {
+                return works;
             }
+            works = data.group.map(g => {
+                console.log("Working group: ")
+                console.log(JSON.stringify(g, null, 2)); 
+                const workSummary = g['work-summary'] && g['work-summary'][0] ? g['work-summary'][0] : {};
+                const doi = (() => {
+                    // Try the first format (externalIds.externalId)
+                    if (workSummary.externalIds && workSummary.externalIds.externalId) {
+                        const doiFromFirst = workSummary.externalIds.externalId
+                            .filter(eid => eid.externalIdType === "doi")
+                            .map(eid => eid.externalIdValue)[0];
+                        if (doiFromFirst) return doiFromFirst;
+                    }
+                    
+                    // Try the second format (external-ids.external-id)
+                    if (workSummary['external-ids'] && workSummary['external-ids']['external-id']) {
+                        const doiFromSecond = workSummary['external-ids']['external-id']
+                            .filter(eid => eid['external-id-type'] === "doi")
+                            .map(eid => eid['external-id-value'])[0];
+                        if (doiFromSecond) return doiFromSecond;
+                    }
+                    
+                    return "";
+                })();
+                return {
+                    title: workSummary.title && workSummary.title.title && workSummary.title.title.value,
+                    identifiers: { doi },
+                    ...workSummary
+                };
+            });
             return works;
         }
 
@@ -234,17 +237,17 @@ ORCID utility for TiddlyWiki
                                 colleagueId: colleagueId,
                                 // work: work,
                                 doi: (work.identifiers && work.identifiers.doi) ? work.identifiers.doi : "",
-                                title: work.title.title.value,
-                                publicationDate: workDate
+                                title: work.title.title.value ? work.title.title.value : "",
+                                publicationDate: workDate,
+                                journalTitle: work['journal-title'] ? work['journal-title'].value : "",
+                                platform: "orcid" 
                             });
                         }
                     }
                 }
             }
 
-            return recentWorks.sort((a, b) => b.publicationDate - a.publicationDate);
-            console.log(JSON.stringify(works, null, 2));
-            return works;
+            return recentWorks;
         }
         return {
             isEnabled: isEnabled,

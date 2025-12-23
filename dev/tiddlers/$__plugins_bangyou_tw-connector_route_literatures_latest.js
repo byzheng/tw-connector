@@ -85,7 +85,7 @@ module-type: route
 				"status": "success",
 				"code": 200,
 				"message": "Latest literatures retrieved successfully for past " + days + " days",
-				"tiddlers": results
+				"items": results
 			}));
 			return;
 
