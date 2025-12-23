@@ -194,6 +194,15 @@ module-type: library
             // Get the list of read DOIs from cache
             const reading = new Reading();
             const readDOIs = reading.getReadDOIs();
+            // Existing DOIs
+            
+            const filter = "[tag[bibtex-entry]!has[draft.of]has[bibtex-doi]get[bibtex-doi]]";
+            const existingDOIs = $tw.wiki.filterTiddlers(filter);
+            // Clean and merge existing DOIs with read DOIs
+            const cleanExistingDOIs = existingDOIs.map(doi => 
+                doi.replace('https://doi.org/', '').replace('http://doi.org/', '')
+            );
+            const allReadDOIs = [...new Set([...readDOIs, ...cleanExistingDOIs])];
             // Iterate through all platforms and collect recent items
             for (const platform of platforms) {
                 try {
@@ -206,7 +215,7 @@ module-type: library
                         const unreadItems = items.filter(item => {
                             if (!item.doi) return true; // Keep items without DOI
                             const cleanDoi = item.doi.replace('https://doi.org/', '').replace('http://doi.org/', '');
-                            return !readDOIs.includes(cleanDoi);
+                            return !allReadDOIs.includes(cleanDoi);
                         });
                         allItems = allItems.concat(unreadItems);
                     }
@@ -214,13 +223,24 @@ module-type: library
                     console.error(`Error processing platform ${platform.constructor.name}:`, error);
                 }
             }
+            // Remove duplicates based on DOI before sorting
+            const uniqueItems = allItems.filter((item, index, self) => {
+                if (!item.doi) return true; // Keep items without DOI
+                const cleanDoi = item.doi.replace('https://doi.org/', '').replace('http://doi.org/', '');
+                return index === self.findIndex(other => {
+                    if (!other.doi) return false;
+                    const otherCleanDoi = other.doi.replace('https://doi.org/', '').replace('http://doi.org/', '');
+                    return otherCleanDoi === cleanDoi;
+                });
+            });
+            
             // Sort all items by publication date in descending order (newest first)
-            allItems.sort((a, b) => {
+            uniqueItems.sort((a, b) => {
                 const dateA = a.publicationDate || new Date(0);
                 const dateB = b.publicationDate || new Date(0);
                 return dateB - dateA;
             });
-            return allItems;
+            return uniqueItems;
         }
 
 
