@@ -51,7 +51,7 @@
 
 .tw-literature-status-badge {
   position: absolute;
-  top: 16px;
+  bottom: 16px;
   right: 16px;
   background: linear-gradient(135deg, #10b981, #059669);
   color: white;
@@ -63,8 +63,46 @@
   letter-spacing: 0.5px;
 }
 
+.tw-literature-read-button {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 24px;
+  height: 24px;
+  background: #f3f4f6;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.tw-literature-read-button:hover {
+  background: #fee2e2;
+  color: #dc2626;
+  border-color: #fca5a5;
+  transform: scale(1.1);
+}
+
+.tw-literature-read-button:active {
+  transform: scale(0.95);
+}
+
+.tw-literature-read-button.reading {
+  background: #fef3c7;
+  color: #d97706;
+  border-color: #fcd34d;
+  cursor: not-allowed;
+}
+
 .tw-literature-content {
-  padding-right: 80px;
+  padding-right: 40px;
+  padding-bottom: 20px;
 }
 
 .tw-literature-title-section {

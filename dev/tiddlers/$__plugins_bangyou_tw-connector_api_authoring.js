@@ -35,6 +35,8 @@ module-type: library
     // use cache
 
     var helper = require('$:/plugins/bangyou/tw-connector/utils/helper.js').Helper();
+    const cacheHelper = require('$:/plugins/bangyou/tw-connector/api/cachehelper.js').cacheHelper('authoring', 9999999);
+
     var platforms = [
         require('$:/plugins/bangyou/tw-connector/api/wos.js').WOS(),
         require('$:/plugins/bangyou/tw-connector/api/homepage.js').Homepage(),
@@ -188,6 +190,9 @@ module-type: library
             
             let allItems = [];
 
+            // Get the list of read DOIs from cache
+            const readDOIs = getReadDOIs();
+            
             // Iterate through all platforms and collect recent items
             for (const platform of platforms) {
                 try {
@@ -196,7 +201,13 @@ module-type: library
                     }
                     const items = platform.getLatest(days);
                     if (items && Array.isArray(items)) {
-                        allItems = allItems.concat(items);
+                        // Filter out items that have been marked as read
+                        const unreadItems = items.filter(item => {
+                            if (!item.doi) return true; // Keep items without DOI
+                            const cleanDoi = item.doi.replace('https://doi.org/', '').replace('http://doi.org/', '');
+                            return !readDOIs.includes(cleanDoi);
+                        });
+                        allItems = allItems.concat(unreadItems);
                     }
                 } catch (error) {
                     console.error(`Error processing platform ${platform.constructor.name}:`, error);
@@ -205,10 +216,70 @@ module-type: library
             return allItems;
         }
 
+        function markAsRead(doi) {
+            if (!doi || typeof doi !== 'string') {
+                throw new Error('Invalid DOI parameter');
+            }
+            
+            try {
+                // Clean the DOI
+                const cleanDoi = doi.replace('https://doi.org/', '').replace('http://doi.org/', '');
+                
+                // Get current read DOIs
+                const readDOIs = getReadDOIs();
+                
+                // Add new DOI if not already present
+                if (!readDOIs.includes(cleanDoi)) {
+                    readDOIs.push(cleanDoi);
+                    
+                    // Save back to cache with timestamp
+                    const readData = {
+                        dois: readDOIs,
+                        lastUpdated: new Date().toISOString()
+                    };
+                    
+                    cacheHelper.saveCache('read-literature', readData);
+                    console.log(`DOI ${cleanDoi} marked as read`);
+                }
+                
+                return true;
+            } catch (error) {
+                console.error('Error marking DOI as read:', error);
+                throw error;
+            }
+        }
+
+        function getReadDOIs() {
+            try {
+                const cacheData = cacheHelper.loadCache('read-literature');
+                if (cacheData && cacheData.dois && Array.isArray(cacheData.dois)) {
+                    return cacheData.dois;
+                }
+                return [];
+            } catch (error) {
+                console.warn('Error loading read DOIs cache:', error);
+                return [];
+            }
+        }
+
+        function clearReadDOIs() {
+            try {
+                cacheHelper.removeCache('read-literature');
+                console.log('Read DOIs cache cleared');
+                return true;
+            } catch (error) {
+                console.error('Error clearing read DOIs cache:', error);
+                throw error;
+            }
+        }
+
         return {
             getAuthorByTiddler: getAuthorByTiddler,
             getAuthorByDOI: getAuthorByDOI,
             getLatest: getLatest,
+            markAsRead: markAsRead,
+            getReadDOIs: getReadDOIs,
+            clearReadDOIs: clearReadDOIs,
             isUpdating: () => isUpdating,
             getUpdateProgress: () => updateProgress,
             startUpdate: startUpdate
