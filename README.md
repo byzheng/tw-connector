@@ -1,8 +1,13 @@
 # tw-literature
 
-A small plugin for Chrome Extension [PubConnector](https://github.com/byzheng/PubConnector) to receive message from Chrome Extension background.js to 
+This plugin provides literature related features for [TiddlyWiki5](https://tiddlywiki.com/).
 
-* open tiddler in the story river.
+
+## Features
+
+* Cache publication list for Colleagues from serval platforms including [Web of Science](https://www.webofscience.com/), [Google Scholar](https://scholar.google.com/), [OpenAlex](https://openalex.org/), [ORCID](https://orcid.org/) and Colleague Homepage.
+* Widgets to display publication list including latest publications.
+* Communicate with Chrome Extension [PubConnector](https://github.com/byzheng/PubConnector)
 
 ## Code and demo
 
