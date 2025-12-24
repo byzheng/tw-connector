@@ -183,7 +183,6 @@ Scopus utility for TiddlyWiki
                 throw new Error(`Invalid Scopus author ID: ${authorId}`);
             }
             const cacheResult = cacheHelper.getCacheByKey(authorId);
-            console.log(`Scopus cache lookup for author ID ${authorId}:`, cacheResult);
             if (cacheResult) {
                 return cacheResult.item;
             }
