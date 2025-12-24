@@ -1,0 +1,51 @@
+caption: Literatures Latest
+created: 20251224000930630
+modified: 20251224001917190
+tags: widget
+title: widget/literatures-latest
+type: text/vnd.tiddlywiki
+
+!! Latest Widget
+
+Display recent literature entries from your research database with flexible filtering options. This widget fetches and displays literature items that have been added within a specified time period.
+
+!! Syntax
+
+```
+<$literatures-latest days="90" count />
+```
+
+!! Content and attributes
+|!Attributes |!Type |!Description |
+|days |optional|Number of days to look back for recent literature entries. The default value is `90` |
+|count |optional|If set to `true`, displays only the count of items. If `false` or omitted, displays full literature cards. Default is `false`|
+
+!! Example
+
+
+
+This example shows number of latest literature entries added in the past year.
+
+```
+<$literatures-latest days=365 count />
+```
+<$literatures-latest days=365 count />
+
+
+This example shows full literature cards for entries added in the past year.
+
+```
+<$literatures-latest days=365 />
+```
+<$literatures-latest days=365 />
+
+!! Behavior
+
+* The list literature fetches list of literature entries from the route `/literatures/latest` endpoint with query parameter `days` specifying the time range
+* The actual reference data is retrieved from crossref API based on DOI
+* When `count` is enabled, displays just the number of matching literature items
+* When `count` is disabled (default), displays formatted literature cards with full details
+* A cross button is rendered at top right corner to clear it from the list. The DOI of the cleared item is cached in the server to avoid showing it again in subsequent fetches 
+* The widget automatically refreshes when tiddlers with the `bibtex-entry` tag are modified
+
+
