@@ -188,6 +188,9 @@ Scopus utility for TiddlyWiki
                 return cacheResult.item;
             }
             const works = await scopusWorksGet(authorId);
+            if (!works || works.length === 0) {
+                throw new Error(`No works found for Scopus author ID: ${authorId}`);
+            }
             await cacheHelper.addEntry(authorId, works);
 
             return works;
