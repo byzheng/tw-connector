@@ -1,6 +1,0 @@
-created: 20241213102116244
-modified: 20241213102129896
-title: $:/config/tw-connector/CopyImageMacro
-type: text/vnd.tiddlywiki
-
- [img[$filename$]] 

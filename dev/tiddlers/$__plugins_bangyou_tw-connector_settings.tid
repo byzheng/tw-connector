@@ -1,9 +1,0 @@
-caption: Connector
-created: 20250614225529306
-modified: 20250615020620849
-tags: $:/tags/ControlPanel/SettingsTab
-title: $:/plugins/bangyou/tw-connector/settings
-type: text/vnd.tiddlywiki
-
-
-<<tabs "[all[shadows+tiddlers]tag[$:/tags/ControlPanel/Settings/TW-Connector]]" "$:/plugins/bangyou/tw-connector/settings/image" "$:/state/tw-connector-settings" "tc-vertical">>
