@@ -115,6 +115,25 @@ The field `researcherid` in the tiddlers with tag `Colleague` is used to to retr
 <$edit-text tiddler="$:/config/tw-literature/authoring/wos/daily-limit" default="5000" tag="input" />
 
 
+
+----
+!! Scopus
+
+The field `scopus` in the tiddlers with tag `Colleague` is used to to retrieve author's publications. 
+
+<$link to="$:/config/tw-literature/authoring/scopus/enable">Retrieve Publication from Scopus</$link> 
+
+<$checkbox tiddler="$:/config/tw-literature/authoring/scopus/enable" field="text" checked="enable" unchecked="disable" default="enable"><$link to="$:/config/tw-literature/authoring/scopus/enable">Enable Scopus</$link></$checkbox>
+
+
+<$link to="$:/config/tw-literature/authoring/scopus/api">API Key for Scopus</$link> 
+<$edit-text tiddler="$:/config/tw-literature/authoring/scopus/api" default="" tag="input" />
+
+
+<$link to="$:/config/tw-literature/authoring/scopus/daily-limit">Daily Limit of API Requests</$link> 
+<$edit-text tiddler="$:/config/tw-literature/authoring/scopus/daily-limit" default="2000" tag="input" />
+
+
 ----
 !! OpenAlex
 

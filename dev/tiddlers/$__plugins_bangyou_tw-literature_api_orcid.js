@@ -252,7 +252,7 @@ ORCID utility for TiddlyWiki
                     });
                 }
             }
-
+            console.log("Recent works from ORCID:", recentWorks.length);
             return recentWorks;
         }
         return {

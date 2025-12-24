@@ -246,7 +246,7 @@ Web of Science utility for TiddlyWiki
                     });
                 }
             }
-
+            console.log("Recent works from Web of Science:", recentWorks.length);
             return recentWorks;
         }
         return {
