@@ -1,0 +1,23 @@
+bibtex-abstract: Point-based crop models are frequently used to investigate the interaction of genotype, environment and management (G~×~E~×~M) for breeding programs and adaptation research. These studies require the processing of millions of simulations to make assessments in national scales. Here we demonstrate a platform to run crop simulations with HTCondor as implemented across more than 120~000 cores on CSIRO network. The workflow of HTCondor usages was built through a server-client structure with standardized messages (simulations), which were queued by message queue sever. The new workflow maximized the performance of the CSIRO HTCondor service and could simultaneously utilize more than 8000 cores. A case study of 4.8 million APSIM simulations (ca. 2 mins each on model desktop), was completed in 32.5~h. This platform makes it is possible to assess all combinations of G~×~E~×~M in a short period. The generic platform has since been used to run other massive serial processing tasks.
+bibtex-author: Zheng, Bangyou and Holland, Edward and Chapman, Scott C.
+bibtex-date: 2016-10
+bibtex-doi: 10.1016/j.envsoft.2016.07.012
+bibtex-entry-type: article
+bibtex-issn: 1364-8152
+bibtex-journaltitle: Environmental Modelling \& Software
+bibtex-keywords: HTCondor,R
+bibtex-pages: 304--310
+bibtex-shortjournal: Environmental Modelling \& Software
+bibtex-title: A standardized workflow to utilise a grid-computing system through advanced message queuing protocols
+bibtex-url: http://www.sciencedirect.com/science/article/pii/S1364815216303450
+bibtex-urldate: 2016-07-20
+bibtex-volume: 84
+bibtex-year: 2016
+bibtex-zotero-key: 6DV998KU
+created: 20251224030725428
+modified: 20251224030725428
+scholar-cid: BFBnCGLXIC0J
+scholar-cites: 3251835747009253380
+tags: bibtex-entry [[Bangyou Zheng]]
+title: zheng_standardized_2016
+type: text/vnd.tiddlywiki

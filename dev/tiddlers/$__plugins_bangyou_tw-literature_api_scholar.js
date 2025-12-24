@@ -84,6 +84,7 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
             };
         }
         function cacheWorks(id, works) {
+            
             if (!isEnabled()) {
                 return;
             }
@@ -95,18 +96,42 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
                 throw new Error("Invalid ID format");
             }
             const cached = getWorks(id);
-            if (cached && Array.isArray(cached) && cached.length > 0) {
-                // Already cached, skip
-                return;
-            }
-            if (!works || !Array.isArray(works)) {
+            // Get today's date in YYYY-MM-DD format
+            const today = new Date().toISOString().split('T')[0];
+
+            let updatedItems = [];
+
+            // Go through all items in works and update access-date based on cached data
+            if (works && Array.isArray(works)) {
+                works.forEach(workItem => {
+                    if (workItem && workItem.cites) {
+                        // Find matching item in cached based on cites
+                        const cachedMatch = cached && Array.isArray(cached) 
+                            ? cached.find(cachedItem => cachedItem && cachedItem.cites === workItem.cites)
+                            : null;
+                        // Use cached access-date if exists, otherwise use today or construct from workItem.year
+                        if (cachedMatch && cachedMatch['access-date']) {
+                            workItem['access-date'] = cachedMatch['access-date'];
+                        } else if (workItem.year) {
+                            // Use workItem.year with January 1st
+                            workItem['access-date'] = `${workItem.year}-${String(new Date().getMonth() + 1).padStart(2, '0')}-01`;
+                        } else {
+                            workItem['access-date'] = today;
+                        }
+                        
+                        updatedItems.push(workItem);
+                    }
+                });
+                console.log(JSON.stringify(updatedItems, null, 2));
+                // Cache the updated works
+                cacheHelper.addEntry(id, updatedItems);
+                clearPending(id);
+                return; 
+            } else if (!works || !Array.isArray(works)) {
                 // If works is null or not an array, mark as pending
                 addPending(id);
                 return;
             }
-
-            cacheHelper.addEntry(id, works);
-            clearPending(id);
         }
 
 

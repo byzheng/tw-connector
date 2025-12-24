@@ -1,0 +1,21 @@
+bibtex-abstract: Rapid prediction and control of flowering time is essential for breeding crops resilient to changing climates. Current models often fail to predict flowering time in new cultivars because molecular models lack integration of environmental signals, while physiological models inadequately capture the interactions of vernalization, photoperiod and temperature. This leads to mischaracterized genotypes and inaccurate forecasts. A new Cereal Anthesis Molecular Phenology (CAMP) model was developed for wheat. It explicitly integrates the regulatory roles of three major ‘virtual’ flowering genes (Vrn1, Vrn2, and Vrn3) with environmental cues. A novel phenotyping strategy based on main stem leaf number was introduced to shorten the time required for data collection and model calibration. CAMP predicted flowering time within 4–7 d across 64 genetically diverse wheat cultivars grown under contrasting environments. The leaf-number phenotyping method reduced phenotyping time by more than 80\%, offering a practical alternative to resource-intensive field trials. Together, these advances enable accurate cultivar characterization and scalable prediction of flowering behaviour. CAMP enables the ability to predict flowering time directly from genotypic data (e.g. SNPs), eliminating the need for costly controlled-environment experiments. This represents a step change in molecular–physiological modelling, supporting faster deployment of new cultivars and more effective design of wheat for future climates.
+bibtex-author: Wang, Enli and Brown, Hamish and Zheng, Bangyou and Zhao, Zhigan and Huth, Neil and Hunt, James R. and Hyles, Jessica and Bloomfield, Maxwell and Celestina, Corinne and Porker, Kenton and Harris, Felicity and Biddulph, Ben and Stefanova, Katia and Trevaskis, Ben
+bibtex-date: 2025
+bibtex-doi: 10.1111/nph.70651
+bibtex-entry-type: article
+bibtex-issn: 1469-8137
+bibtex-journaltitle: New Phytologist
+bibtex-keywords: flowering time,gene expression,molecular–physiological model,phenological development,phenotyping,photoperiod,vernalization,wheat
+bibtex-langid: english
+bibtex-title: Molecular–physiological model integration revolutionizes cereal flowering prediction
+bibtex-url: https://onlinelibrary.wiley.com/doi/abs/10.1111/nph.70651
+bibtex-urldate: 2025-11-03
+bibtex-year: 2025
+bibtex-zotero-key: AJ58J6FK
+created: 20251224030548017
+modified: 20251224030548017
+scholar-cid: IL6EtN2o5rUJ
+scholar-cites: 13107349435678244384
+tags: bibtex-entry [[Bangyou Zheng]]
+title: wang_molecularphysiological_2025
+type: text/vnd.tiddlywiki
