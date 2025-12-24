@@ -122,7 +122,6 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
                         updatedItems.push(workItem);
                     }
                 });
-                console.log(JSON.stringify(updatedItems, null, 2));
                 // Cache the updated works
                 cacheHelper.addEntry(id, updatedItems);
                 clearPending(id);
