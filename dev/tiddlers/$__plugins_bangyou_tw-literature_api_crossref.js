@@ -17,13 +17,13 @@ Crossref API utility for TiddlyWiki
     
     const platform_field = "crossref"; // Field in tiddler that contains the Crossref ID
     const cacheHelper = require('$:/plugins/bangyou/tw-literature/api/cachehelper.js').cacheHelper('crossref', 9999999);
+    
+    // Rate limiting: 5 requests per second, 1 concurrent request
+    let lastRequestTime = 0;
+    const MIN_REQUEST_INTERVAL = 250; // 250ms = 4 requests/sec (safe margin under 5/sec limit)
 
     function Crossref(host = "https://api.crossref.org/") {
         const this_host = host.replace(/\/+$/, "");
-        
-        // Track last request time for rate limiting (5 req/sec = 200ms between requests)
-        let lastRequestTime = 0;
-        const MIN_REQUEST_INTERVAL = 200; // milliseconds
 
         function isEnabled() {
             return true;
@@ -38,19 +38,24 @@ Crossref API utility for TiddlyWiki
         }
 
         async function crossrefRequest(url) {
-            // Rate limiting: ensure minimum interval between requests (5 req/sec = 200ms)
+            // Enforce rate limiting: wait if needed to maintain minimum interval between requests
             const now = Date.now();
             const timeSinceLastRequest = now - lastRequestTime;
             if (timeSinceLastRequest < MIN_REQUEST_INTERVAL) {
-                const delay = MIN_REQUEST_INTERVAL - timeSinceLastRequest;
-                await new Promise(resolve => setTimeout(resolve, delay));
+                const waitTime = MIN_REQUEST_INTERVAL - timeSinceLastRequest;
+                console.log(`Crossref rate limiting: waiting ${waitTime}ms before next request`);
+                await new Promise(resolve => setTimeout(resolve, waitTime));
             }
 
-            const response = await fetch(url);
+            // Update last request time before making the request
             lastRequestTime = Date.now();
             
+            const response = await fetch(url);
+            
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                const errorText = await response.text();
+                console.error(`Crossref API Error ${response.status}: ${errorText}`);
+                throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
             }
             return response.json();
         }
