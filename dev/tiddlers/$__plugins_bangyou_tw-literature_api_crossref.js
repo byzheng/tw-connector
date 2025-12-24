@@ -18,9 +18,11 @@ Crossref API utility for TiddlyWiki
     const platform_field = "crossref"; // Field in tiddler that contains the Crossref ID
     const cacheHelper = require('$:/plugins/bangyou/tw-literature/api/cachehelper.js').cacheHelper('crossref', 9999999);
     
-    // Rate limiting: 5 requests per second, 1 concurrent request
+    // Rate limiting: Conservative approach to avoid 429 errors
     let lastRequestTime = 0;
-    const MIN_REQUEST_INTERVAL = 250; // 250ms = 4 requests/sec (safe margin under 5/sec limit)
+    const MIN_REQUEST_INTERVAL = 350; // 350ms = ~2.9 requests/sec (conservative but reasonable)
+    const MAX_RETRIES = 3;
+    const INITIAL_RETRY_DELAY = 2000; // Start with 2 second delay for retries
 
     function Crossref(host = "https://api.crossref.org/") {
         const this_host = host.replace(/\/+$/, "");
@@ -37,7 +39,7 @@ Crossref API utility for TiddlyWiki
             return `${this_host}${normalizedPath}${queryString ? `?${queryString}` : ""}`;
         }
 
-        async function crossrefRequest(url) {
+        async function crossrefRequest(url, retryCount = 0) {
             // Enforce rate limiting: wait if needed to maintain minimum interval between requests
             const now = Date.now();
             const timeSinceLastRequest = now - lastRequestTime;
@@ -54,6 +56,15 @@ Crossref API utility for TiddlyWiki
             
             if (!response.ok) {
                 const errorText = await response.text();
+                
+                // Handle 429 rate limit errors with exponential backoff
+                if (response.status === 429 && retryCount < MAX_RETRIES) {
+                    const retryDelay = INITIAL_RETRY_DELAY * Math.pow(2, retryCount);
+                    console.log(`Crossref 429 error (attempt ${retryCount + 1}/${MAX_RETRIES}): retrying after ${retryDelay}ms`);
+                    await new Promise(resolve => setTimeout(resolve, retryDelay));
+                    return crossrefRequest(url, retryCount + 1);
+                }
+                
                 console.error(`Crossref API Error ${response.status}: ${errorText}`);
                 throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
             }
