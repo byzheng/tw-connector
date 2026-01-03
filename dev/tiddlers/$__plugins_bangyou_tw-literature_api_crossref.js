@@ -71,7 +71,7 @@ Crossref API utility for TiddlyWiki
             return response.json();
         }
 
-        async function getWorksByDOI(doi) {
+        async function getWorksByDOI(doi, simplify = false) {
             if (!isEnabled()) {
                 throw new Error("Crossref API is disabled");
             }
@@ -82,6 +82,9 @@ Crossref API utility for TiddlyWiki
             // Check cache first
             const cached = cacheHelper.getCacheByKey(key);
             if (cached) {
+                if (simplify && cached.item.message) {
+                    return simplifyWorkData(cached.item);
+                }
                 return cached.item;
             }
 
@@ -91,7 +94,29 @@ Crossref API utility for TiddlyWiki
             // Update cache
             cacheHelper.addEntry(key, result);
 
+            if (simplify && result.message) {
+                return simplifyWorkData(result);
+            }
+
             return result;
+        }
+
+        function simplifyWorkData(workData) {
+            const data = workData.message;
+            
+            return {
+                message: {
+                    title: data.title,
+                    author: data.author,
+                    'container-title': data['container-title'],
+                    publisher: data.publisher,
+                    'published-online': data['published-online'],
+                    'published-print': data['published-print'],
+                    published: data.published,
+                    'reference-count': data['reference-count'],
+                    'is-referenced-by-count': data['is-referenced-by-count']
+                }
+            };
         }
 
         function removeExpiredEntries() {

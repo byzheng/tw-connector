@@ -241,6 +241,8 @@ function Literature() {
                     // Check if data is already cached
                     if (crossrefCache.has(cleanDoi)) {
                         crossrefData = crossrefCache.get(cleanDoi);
+                    } else if (currentItem.platform === "Web of Science" || currentItem.platform === "Scopus") {
+                        crossrefData = currentItem;
                     } else {
                         const response = await fetch(`literature/crossref/${encodeURIComponent(cleanDoi)}`);
                         
@@ -252,13 +254,13 @@ function Literature() {
                         if (!crossrefData || !crossrefData.data || !crossrefData.data.message) {
                             throw new Error('Invalid crossref response structure');
                         }
-                        
+                        crossrefData = crossrefData.data.message;
                         // Cache the successful response
                         crossrefCache.set(cleanDoi, crossrefData);
                     }
 
                     
-                    const data = crossrefData.data.message;
+                    const data = crossrefData;
                     
                     // Clear the existing simple structure and rebuild with rich content
                     currentRefItem.innerHTML = '';
@@ -289,7 +291,7 @@ function Literature() {
                     titleLink.target = '_blank';
                     titleLink.rel = 'noopener noreferrer';
                     titleLink.className = 'tw-literature-title-link';
-                    titleLink.innerHTML = data.title?.[0] || currentItem.title || 'No title available';
+                    titleLink.innerHTML = data.title || data.title?.[0] || currentItem.title || 'No title available';
                     
                     titleElement.appendChild(titleLink);
                     titleSection.appendChild(titleElement);
@@ -323,11 +325,20 @@ function Literature() {
                             authorSpan.className = 'tw-literature-author-chip';
                             const authorName = `${author.given || ''} ${author.family || ''}`.trim();
                             
+                            let links = '';
                             if (author.ORCID) {
-                                authorSpan.innerHTML = `
-                                    ${authorName}
-                                    <a href="${author.ORCID}" target="_blank" class="tw-literature-author-orcid">🆔</a>
-                                `;
+                                const orcidUrl = author.ORCID.startsWith('http') ? author.ORCID : `https://orcid.org/${author.ORCID}`;
+                                links += `<a href="${orcidUrl}" target="_blank" class="tw-literature-author-orcid" title="ORCID">🆔</a>`;
+                            }
+                            if (author.researcherId) {
+                                links += `<a href="https://www.webofscience.com/wos/author/record/${author.researcherId}" target="_blank" class="tw-literature-author-orcid" title="Web of Science">🔬</a>`;
+                            }
+                            if (author.authorId) {
+                                links += `<a href="https://www.scopus.com/authid/detail.uri?authorId=${author.authorId}" target="_blank" class="tw-literature-author-orcid" title="Scopus">🔍</a>`;
+                            }
+                            
+                            if (links) {
+                                authorSpan.innerHTML = `${authorName} ${links}`;
                             } else {
                                 authorSpan.textContent = authorName;
                             }

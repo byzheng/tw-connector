@@ -236,13 +236,55 @@ Web of Science utility for TiddlyWiki
                         continue;
                     }
                     const doi = work.identifiers.doi;
+                    
+                    // Extract and format authors
+                    const authors = [];
+                    if (work.names && work.names.authors && Array.isArray(work.names.authors)) {
+                        work.names.authors.forEach(author => {
+                            // Parse displayName (format: "LastName, FirstName")
+                            let given = "";
+                            let family = "";
+                            
+                            if (author.displayName) {
+                                const parts = author.displayName.split(',').map(s => s.trim());
+                                family = parts[0] || "";
+                                given = parts[1] || "";
+                            }
+                            
+                            authors.push({
+                                given: given,
+                                family: family,
+                                researcherId: author.researcherId || undefined
+                            });
+                        });
+                    }
+                    
+                    // Extract publication date
+                    const publishedDate = {};
+                    if (work.source && work.source.publishYear) {
+                        const year = parseInt(work.source.publishYear);
+                        const month = work.source.publishMonth;
+                        if (month) {
+                            const monthNum = new Date(`${month} 1`).getMonth() + 1;
+                            publishedDate['date-parts'] = [[year, monthNum, 1]];
+                        } else {
+                            publishedDate['date-parts'] = [[year, 1, 1]];
+                        }
+                    }
+                    
                     recentWorks.push({
                         colleagueId: colleagueId,
-                        // work: work,
                         doi: doi,
+                        platform: "Web of Science",
                         title: work.title ? work.title : "",
                         publicationDate: workDate,
-                        platform: "Web of Science" 
+                        author: authors.length > 0 ? authors : undefined,
+                        'container-title': work.source && work.source.sourceTitle ? [work.source.sourceTitle] : undefined,
+                        publisher: work.source && work.source.publisher ? work.source.publisher : undefined,
+                        'published-print': Object.keys(publishedDate).length > 0 ? publishedDate : undefined,
+                        published: Object.keys(publishedDate).length > 0 ? publishedDate : undefined,
+                        'reference-count': work.references && work.references.count ? work.references.count : undefined,
+                        'is-referenced-by-count': work.citations && work.citations.count ? work.citations.count : undefined
                     });
                 }
             }

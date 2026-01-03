@@ -118,8 +118,8 @@ Dependencies:
 			return;
 		}
 
-		// Make async request to Crossref API
-		crossref.getWorksByDOI(doi)
+		// Make async request to Crossref API with simplified response for visualization
+		crossref.getWorksByDOI(doi, true)
 			.then(function(data) {
 				response.writeHead(200, { "Content-Type": "application/json" });
 				response.end(JSON.stringify({
