@@ -22,6 +22,30 @@ Web of Science utility for TiddlyWiki
     function WOS(host = "https://api.clarivate.com") {
         const this_host = host.replace(/\/+$/, "");
         const path_document = "/apis/wos-starter/v1/documents"
+        
+        // Cache the researcherId to colleague mapping
+        let researcherIdToColleagueCache = null;
+        
+        function getResearcherIdToColleagueMap() {
+            if (researcherIdToColleagueCache !== null) {
+                return researcherIdToColleagueCache;
+            }
+            
+            const map = new Map();
+            const colleagueTiddlers = $tw.wiki.filterTiddlers('[tag[Colleague]has[researcherid]]');
+            colleagueTiddlers.forEach(tiddlerTitle => {
+                const tiddler = $tw.wiki.getTiddler(tiddlerTitle);
+                if (tiddler && tiddler.fields.researcherid) {
+                    const researcherId = extractResearchId(tiddler.fields.researcherid);
+                    if (researcherId) {
+                        map.set(researcherId, tiddlerTitle);
+                    }
+                }
+            });
+            
+            researcherIdToColleagueCache = map;
+            return map;
+        }
 
         function isEnabled() {
             let tiddler = $tw.wiki.getTiddler("$:/config/tw-literature/authoring/wos/enable");
@@ -195,6 +219,9 @@ Web of Science utility for TiddlyWiki
                 return [];
             }
             
+            // Get cached map of researcherId -> colleague name for fast lookup
+            const researcherIdToColleague = getResearcherIdToColleagueMap();
+            
             const works = cacheHelper.getCaches();
             const cutoffDate = new Date();
             cutoffDate.setDate(cutoffDate.getDate() - days);
@@ -255,7 +282,7 @@ Web of Science utility for TiddlyWiki
                                 given: given,
                                 family: family,
                                 researcherId: author.researcherId || undefined,
-                                colleague: getColleagueNameByResearcherId(author.researcherId || undefined)
+                                colleague: author.researcherId ? researcherIdToColleague.get(author.researcherId) || null : null
                             });
                         });
                     }

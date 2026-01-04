@@ -23,6 +23,30 @@ Scopus utility for TiddlyWiki
         const this_host = host.replace(/\/+$/, "");
         const path_scopus_search = "/content/search/scopus";
         const path_abstract_retrieval = "/content/abstract/doi";
+        
+        // Cache the authorId to colleague mapping
+        let authorIdToColleagueCache = null;
+        
+        function getAuthorIdToColleagueMap() {
+            if (authorIdToColleagueCache !== null) {
+                return authorIdToColleagueCache;
+            }
+            
+            const map = new Map();
+            const colleagueTiddlers = $tw.wiki.filterTiddlers('[tag[Colleague]has[scopus]]');
+            colleagueTiddlers.forEach(tiddlerTitle => {
+                const tiddler = $tw.wiki.getTiddler(tiddlerTitle);
+                if (tiddler && tiddler.fields.scopus) {
+                    const authorId = extractAuthorId(tiddler.fields.scopus);
+                    if (authorId) {
+                        map.set(authorId, tiddlerTitle);
+                    }
+                }
+            });
+            
+            authorIdToColleagueCache = map;
+            return map;
+        }
 
         function isEnabled() {
             let tiddler = $tw.wiki.getTiddler("$:/config/tw-literature/authoring/scopus/enable");
@@ -247,6 +271,9 @@ Scopus utility for TiddlyWiki
                 return [];
             }
             
+            // Get cached map of authorId -> colleague name for fast lookup
+            const authoridToColleague = getAuthorIdToColleagueMap();
+            
             const works = cacheHelper.getCaches();
             const cutoffDate = new Date();
             cutoffDate.setDate(cutoffDate.getDate() - days);
@@ -290,11 +317,11 @@ Scopus utility for TiddlyWiki
                                 family: author.surname || author['ce:surname'] || "",
                                 authorId: author['authid'] || undefined,
                                 ORCID: author['orcid'] || author['@orcid'] || undefined,
-                                colleague: getColleagueNameByAuthorId(author['authid'] || undefined)
+                                colleague: authoridToColleague.get(author['authid']) || null
                             });
                         });
                     }
-
+                    
                     recentWorks.push({
                         colleagueId: authorId,
                         doi: doi,
@@ -338,17 +365,6 @@ Scopus utility for TiddlyWiki
             return null;
         }
 
-        // Get colleague name by author ID
-        function getColleagueNameByAuthorId(authorId) {
-            if (!authorId || authorId.length === 0) {
-                return null;
-            }
-            const tiddlers = $tw.wiki.filterTiddlers(`[tag[Colleague]search:scopus:regexp[${authorId}]]`);
-            if (tiddlers.length === 1) {
-                return tiddlers[0];
-            }
-            return null;
-        }
         return {
             isEnabled: isEnabled,
             cacheWorks: cacheWorks,
