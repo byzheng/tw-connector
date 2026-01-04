@@ -39,8 +39,8 @@ module-type: library
     const Reading = require('$:/plugins/bangyou/tw-literature/api/reading.js').Reading;
 
     var platforms = [
-        require('$:/plugins/bangyou/tw-literature/api/wos.js').WOS(),
         require('$:/plugins/bangyou/tw-literature/api/scopus.js').SCOPUS(),
+        require('$:/plugins/bangyou/tw-literature/api/wos.js').WOS(),
         require('$:/plugins/bangyou/tw-literature/api/homepage.js').Homepage(),
         require('$:/plugins/bangyou/tw-literature/api/orcid.js').ORCID(),
         require('$:/plugins/bangyou/tw-literature/api/scholar.js').Scholar(),
