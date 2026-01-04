@@ -170,74 +170,103 @@ function Literature() {
             return result;
         }
 
-        for (const item of items) {
-            // Handle items without DOI with error card
-            if (!item.doi) {
-                console.warn('Skipping item without DOI:', item);
+        // Process items in batches for progressive rendering
+        const BATCH_SIZE = 2;
+        let currentIndex = 0;
+        
+        function processBatch() {
+            const batchEnd = Math.min(currentIndex + BATCH_SIZE, items.length);
+            
+            for (let i = currentIndex; i < batchEnd; i++) {
+                const item = items[i];
+                
+                // Handle items without DOI with error card
+                if (!item.doi) {
+                    console.warn('Skipping item without DOI:', item);
+                    
+                    const refItem = document.createElement('div');
+                    refItem.className = "tw-literature-item tw-literature-error";
+                    
+                    const errorContent = document.createElement('div');
+                    errorContent.className = 'tw-literature-fallback';
+                    errorContent.innerHTML = `
+                        <div class="tw-literature-fallback-icon">⚠️</div>
+                        <h3 class="tw-literature-fallback-title">${item.title || 'No title available'}</h3>
+                        <p class="tw-literature-fallback-subtitle">Missing DOI - Cannot load details</p>
+                    `;
+                    
+                    // Add platform information to error case
+                    const errorFooter = document.createElement('div');
+                    errorFooter.className = 'tw-literature-footer';
+                    
+                    const errorLeftInfo = document.createElement('div');
+                    errorLeftInfo.className = 'tw-literature-footer-left';
+                    errorFooter.appendChild(errorLeftInfo);
+                    
+                    const errorRightInfo = document.createElement('div');
+                    errorRightInfo.className = 'tw-literature-footer-right';
+                    const sourceSpan = document.createElement('span');
+                    sourceSpan.className = 'tw-literature-source-badge';
+                    sourceSpan.textContent = `🔗 ${item.platform || 'Unknown'}`;
+                    errorRightInfo.appendChild(sourceSpan);
+                    errorFooter.appendChild(errorRightInfo);
+                    errorContent.appendChild(errorFooter);
+                    
+                    refItem.appendChild(errorContent);
+                    result.appendChild(refItem);
+                    continue;
+                }
                 
                 const refItem = document.createElement('div');
-                refItem.className = "tw-literature-item tw-literature-error";
+                refItem.className = "tw-literature-item";
+
+                // Create a title item with a link to the DOI
+                const titleItem = document.createElement('div');
+                titleItem.className = "tw-literature-title";
+
+                const titleItemSpan = document.createElement('span');
+                titleItemSpan.className = "tw-literature-title-text";
+
+                const doiLink = document.createElement('a');
+                doiLink.href = item.doi.startsWith('https://doi.org/') ? item.doi : `https://doi.org/${item.doi}`;
+                doiLink.target = "_blank";
+                doiLink.rel = "noopener noreferrer";
+                doiLink.className = "tw-literature-doi-link";
+                doiLink.innerHTML = "Loading...";
+                titleItemSpan.appendChild(doiLink);
+                titleItem.appendChild(titleItemSpan);
+                refItem.appendChild(titleItem);
+
+                // Create a div for the authors
+                const authorsDiv = document.createElement('div');
+                authorsDiv.className = "literature-authors";
+                refItem.appendChild(authorsDiv);
                 
-                const errorContent = document.createElement('div');
-                errorContent.className = 'tw-literature-fallback';
-                errorContent.innerHTML = `
-                    <div class="tw-literature-fallback-icon">⚠️</div>
-                    <h3 class="tw-literature-fallback-title">${item.title || 'No title available'}</h3>
-                    <p class="tw-literature-fallback-subtitle">Missing DOI - Cannot load details</p>
-                `;
-                
-                // Add platform information to error case
-                const errorFooter = document.createElement('div');
-                errorFooter.className = 'tw-literature-footer';
-                
-                const errorLeftInfo = document.createElement('div');
-                errorLeftInfo.className = 'tw-literature-footer-left';
-                errorFooter.appendChild(errorLeftInfo);
-                
-                const errorRightInfo = document.createElement('div');
-                errorRightInfo.className = 'tw-literature-footer-right';
-                const sourceSpan = document.createElement('span');
-                sourceSpan.className = 'tw-literature-source-badge';
-                sourceSpan.textContent = `🔗 ${item.platform || 'Unknown'}`;
-                errorRightInfo.appendChild(sourceSpan);
-                errorFooter.appendChild(errorRightInfo);
-                errorContent.appendChild(errorFooter);
-                
-                refItem.appendChild(errorContent);
+                // Add to result immediately after creating the complete structure
                 result.appendChild(refItem);
-                continue;
+                
+                // Fetch and render item data
+                renderItem(item, refItem, doiLink, titleItem, authorsDiv, story, current_tiddler, openLinkFromInsideRiver, openLinkFromOutsideRiver);
             }
-            const refItem = document.createElement('div');
-            refItem.className = "tw-literature-item";
-
-            // Create a title item with a link to the DOI
-            const titleItem = document.createElement('div');
-            titleItem.className = "tw-literature-title";
-
-            const titleItemSpan = document.createElement('span');
-            titleItemSpan.className = "tw-literature-title-text";
-
-            const doiLink = document.createElement('a');
-            doiLink.href = item.doi.startsWith('https://doi.org/') ? item.doi : `https://doi.org/${item.doi}`;
-            doiLink.target = "_blank";
-            doiLink.rel = "noopener noreferrer";
-            doiLink.className = "tw-literature-doi-link";
-            doiLink.innerHTML = "Loading...";
-            titleItemSpan.appendChild(doiLink);
-            titleItem.appendChild(titleItemSpan);
-            refItem.appendChild(titleItem);
-
-            // Create a div for the authors
-            const authorsDiv = document.createElement('div');
-            authorsDiv.className = "literature-authors";
-            refItem.appendChild(authorsDiv);
             
-            // Add to result immediately after creating the complete structure
-            result.appendChild(refItem);
+            currentIndex = batchEnd;
             
-            
-            // Fetch data from crossref API (this is async and won't block the loop)
-            (async (currentItem, currentRefItem, currentDoiLink, currentTitleItem, currentAuthorsDiv) => {
+            // Schedule next batch if there are more items
+            if (currentIndex < items.length) {
+                setTimeout(processBatch, 0);
+            }
+        }
+        
+        // Start processing first batch
+        processBatch();
+        
+        return result;
+    }
+    
+    // Separate function to render individual item (called synchronously, fetches async)
+    function renderItem(currentItem, currentRefItem, currentDoiLink, currentTitleItem, currentAuthorsDiv, story, current_tiddler, openLinkFromInsideRiver, openLinkFromOutsideRiver) {
+        // Fetch data from crossref API (this is async and won't block)
+        (async () => {
                 try {
                     const cleanDoi = currentItem.doi.replace('https://doi.org/', '').replace('http://doi.org/', '');
 
@@ -361,7 +390,7 @@ function Literature() {
                                 colleagueLink.className = 'tc-tiddlylink tc-tiddlylink-resolves';
                                 colleagueLink.style.textDecoration = 'none';
                                 colleagueLink.style.color = 'inherit';
-                                colleagueLink.style.fontWeight = '500';
+                                colleagueLink.style.fontWeight = 'bold';
                                 colleagueLink.textContent = author.colleague;
                                 colleagueLink.addEventListener('click', function(e) {
                                     e.preventDefault();
@@ -487,7 +516,7 @@ function Literature() {
                     rightInfo.style.marginLeft = 'auto';
                     const sourceSpan = document.createElement('span');
                     sourceSpan.className = 'tw-literature-source-badge';
-                    sourceSpan.textContent = `🔗 ${item.platform}`;
+                    sourceSpan.textContent = `🔗 ${currentItem.platform}`;
                     rightInfo.appendChild(sourceSpan);
                     footer.appendChild(rightInfo);
                     
@@ -537,16 +566,14 @@ function Literature() {
                     
                     currentRefItem.appendChild(fallbackContent);
                 }
-            })(item, refItem, doiLink, titleItem, authorsDiv);
+            })();
         }
         
-        return result;
+        return {
+            card: card,
+            cardFromDOIs: cardFromDOIs
+        };
     }
-    return {
-        card: card,
-        cardFromDOIs: cardFromDOIs
-    };
-}
 
 
-exports.Literature = Literature;
+    exports.Literature = Literature;
