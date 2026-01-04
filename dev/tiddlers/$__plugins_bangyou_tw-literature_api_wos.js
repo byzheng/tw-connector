@@ -220,7 +220,7 @@ Web of Science utility for TiddlyWiki
             }
             
             // Get cached map of researcherId -> colleague name for fast lookup
-            const researcherIdToColleague = getResearcherIdToColleagueMap();
+            // const researcherIdToColleague = getResearcherIdToColleagueMap();
             
             const works = cacheHelper.getCaches();
             const cutoffDate = new Date();
@@ -281,8 +281,7 @@ Web of Science utility for TiddlyWiki
                             authors.push({
                                 given: given,
                                 family: family,
-                                researcherId: author.researcherId || undefined,
-                                colleague: author.researcherId ? researcherIdToColleague.get(author.researcherId) || null : null
+                                researcherId: author.researcherId || undefined
                             });
                         });
                     }

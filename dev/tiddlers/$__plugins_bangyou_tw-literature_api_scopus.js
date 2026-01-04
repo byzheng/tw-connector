@@ -272,7 +272,7 @@ Scopus utility for TiddlyWiki
             }
             
             // Get cached map of authorId -> colleague name for fast lookup
-            const authoridToColleague = getAuthorIdToColleagueMap();
+            //const authoridToColleague = getAuthorIdToColleagueMap();
             
             const works = cacheHelper.getCaches();
             const cutoffDate = new Date();
@@ -316,8 +316,7 @@ Scopus utility for TiddlyWiki
                                 given: author['given-name'] || author.givenname || "",
                                 family: author.surname || author['ce:surname'] || "",
                                 authorId: author['authid'] || undefined,
-                                ORCID: author['orcid'] || author['@orcid'] || undefined,
-                                colleague: authoridToColleague.get(author['authid']) || null
+                                ORCID: author['orcid'] || author['@orcid'] || undefined
                             });
                         });
                     }

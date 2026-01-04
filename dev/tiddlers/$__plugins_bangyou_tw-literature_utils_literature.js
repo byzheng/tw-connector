@@ -316,13 +316,43 @@ function Literature() {
                         authorsLabel.textContent = 'Authors:';
                         authorsContainer.appendChild(authorsLabel);
                         
-                        const maxAuthors = 5;
+                        const maxAuthors = 20;
                         const authorsToShow = data.author.slice(0, maxAuthors);
                         
                         authorsToShow.forEach((author, index) => {
                             const authorSpan = document.createElement('span');
                             authorSpan.className = 'tw-literature-author-chip';
                             const authorName = `${author.given || ''} ${author.family || ''}`.trim();
+                            
+                            // Find colleague tiddler by searching researcherId, authorId, or ORCID
+                            if (!author.colleague && typeof $tw !== 'undefined' && $tw.wiki) {
+                                // Build a single filter with all available identifiers
+                                const filterParts = [];
+                                
+                                if (author.researcherId) {
+                                    filterParts.push(`[tag[Colleague]search:researcherid:regexp[${author.researcherId}]]`);
+                                }
+                                
+                                if (author.authorId) {
+                                    filterParts.push(`[tag[Colleague]search:scopus:regexp[${author.authorId}]]`);
+                                }
+                                
+                                if (author.ORCID) {
+                                    const orcidClean = author.ORCID.replace('https://orcid.org/', '');
+                                    filterParts.push(`[tag[Colleague]search:orcid:regexp[${orcidClean}]]`);
+                                }
+                                
+                                // Run single filter with all conditions (OR logic)
+                                if (filterParts.length > 0) {
+                                    const filter = filterParts.join(' ');
+                                    const colleagueTiddlers = $tw.wiki.filterTiddlers(filter);
+                                    
+                                    // Set colleague if exactly one match found
+                                    if (colleagueTiddlers.length === 1) {
+                                        author.colleague = colleagueTiddlers[0];
+                                    }
+                                }
+                            }
                             
                             // Create author name with optional colleague link
                             if (author.colleague) {
