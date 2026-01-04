@@ -150,9 +150,14 @@ function Literature() {
 
     const crossrefCache = new Map();
 
-    function cardFromDOIs(items) {
+    function cardFromDOIs(items, current_tiddler) {
         let result = document.createElement('div');
         result.className = "tw-literature-list";
+        
+        // Create TiddlyWiki story instance once for reuse
+        const story = (typeof $tw !== 'undefined' && $tw.wiki) ? new $tw.Story({ wiki: $tw.wiki }) : null;
+        var openLinkFromInsideRiver = $tw.wiki.getTiddler("$:/config/Navigation/openLinkFromInsideRiver").fields.text;
+        var openLinkFromOutsideRiver = $tw.wiki.getTiddler("$:/config/Navigation/openLinkFromOutsideRiver").fields.text;
         
         if (!Array.isArray(items) || items.length === 0) {
             const emptyState = document.createElement('div');
@@ -269,12 +274,6 @@ function Literature() {
                     const readButton = createReadButton(cleanDoi, currentRefItem);
                     currentRefItem.appendChild(readButton);
                     
-                    // Create status badge
-                    const statusBadge = document.createElement('div');
-                    statusBadge.className = 'tw-literature-status-badge';
-                    statusBadge.textContent = 'Published';
-                    currentRefItem.appendChild(statusBadge);
-                    
                     // Create main content container
                     const contentContainer = document.createElement('div');
                     contentContainer.className = 'tw-literature-content';
@@ -325,22 +324,59 @@ function Literature() {
                             authorSpan.className = 'tw-literature-author-chip';
                             const authorName = `${author.given || ''} ${author.family || ''}`.trim();
                             
-                            let links = '';
-                            if (author.ORCID) {
-                                const orcidUrl = author.ORCID.startsWith('http') ? author.ORCID : `https://orcid.org/${author.ORCID}`;
-                                links += `<a href="${orcidUrl}" target="_blank" class="tw-literature-author-orcid" title="ORCID">🆔</a>`;
-                            }
-                            if (author.researcherId) {
-                                links += `<a href="https://www.webofscience.com/wos/author/record/${author.researcherId}" target="_blank" class="tw-literature-author-orcid" title="Web of Science">🔬</a>`;
-                            }
-                            if (author.authorId) {
-                                links += `<a href="https://www.scopus.com/authid/detail.uri?authorId=${author.authorId}" target="_blank" class="tw-literature-author-orcid" title="Scopus">🔍</a>`;
+                            // Create author name with optional colleague link
+                            if (author.colleague) {
+                                const colleagueLink = document.createElement('a');
+                                colleagueLink.href = `#${encodeURIComponent(author.colleague)}`;
+                                colleagueLink.className = 'tc-tiddlylink tc-tiddlylink-resolves';
+                                colleagueLink.style.textDecoration = 'none';
+                                colleagueLink.style.color = 'inherit';
+                                colleagueLink.style.fontWeight = '500';
+                                colleagueLink.textContent = author.colleague;
+                                colleagueLink.addEventListener('click', function(e) {
+                                    e.preventDefault();
+                                    if (story) {
+                                        story.addToStory(author.colleague, current_tiddler, {
+                                            openLinkFromInsideRiver: openLinkFromInsideRiver,
+                                            openLinkFromOutsideRiver: openLinkFromOutsideRiver
+                                        });
+                                        story.addToHistory(author.colleague);
+                                    }
+                                });
+                                authorSpan.appendChild(colleagueLink);
+                            } else {
+                                const nameText = document.createTextNode(authorName);
+                                authorSpan.appendChild(nameText);
                             }
                             
-                            if (links) {
-                                authorSpan.innerHTML = `${authorName} ${links}`;
-                            } else {
-                                authorSpan.textContent = authorName;
+                            // Add identifier links
+                            if (author.ORCID) {
+                                const orcidUrl = author.ORCID.startsWith('http') ? author.ORCID : `https://orcid.org/${author.ORCID}`;
+                                const orcidLink = document.createElement('a');
+                                orcidLink.href = orcidUrl;
+                                orcidLink.target = '_blank';
+                                orcidLink.className = 'tw-literature-author-orcid';
+                                orcidLink.title = 'ORCID';
+                                orcidLink.textContent = ' 🆔';
+                                authorSpan.appendChild(orcidLink);
+                            }
+                            if (author.researcherId) {
+                                const wosLink = document.createElement('a');
+                                wosLink.href = `https://www.webofscience.com/wos/author/record/${author.researcherId}`;
+                                wosLink.target = '_blank';
+                                wosLink.className = 'tw-literature-author-orcid';
+                                wosLink.title = 'Web of Science';
+                                wosLink.textContent = ' 🔬';
+                                authorSpan.appendChild(wosLink);
+                            }
+                            if (author.authorId) {
+                                const scopusLink = document.createElement('a');
+                                scopusLink.href = `https://www.scopus.com/authid/detail.uri?authorId=${author.authorId}`;
+                                scopusLink.target = '_blank';
+                                scopusLink.className = 'tw-literature-author-orcid';
+                                scopusLink.title = 'Scopus';
+                                scopusLink.textContent = ' 🔍';
+                                authorSpan.appendChild(scopusLink);
                             }
                             
                             authorsContainer.appendChild(authorSpan);
@@ -379,7 +415,7 @@ function Literature() {
                         journalSection.appendChild(publisherSpan);
                     }
                     
-                    const pubDate = data['published-online'] || data['published-print'] || data.published;
+                    const pubDate = data['publicationDate'] || data['published-print'] || data.published;
                     if (pubDate?.['date-parts']?.[0]) {
                         const year = pubDate['date-parts'][0][0];
                         const month = pubDate['date-parts'][0][1];

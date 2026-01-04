@@ -289,18 +289,10 @@ Scopus utility for TiddlyWiki
                                 given: author['given-name'] || author.givenname || "",
                                 family: author.surname || author['ce:surname'] || "",
                                 authorId: author['authid'] || undefined,
-                                ORCID: author['orcid'] || author['@orcid'] || undefined
+                                ORCID: author['orcid'] || author['@orcid'] || undefined,
+                                colleague: getColleagueNameByAuthorId(author['authid'] || undefined)
                             });
                         });
-                    }
-                    
-                    // Extract publication date
-                    const publishedDate = {};
-                    if (work['prism:coverDate']) {
-                        const date = new Date(work['prism:coverDate']);
-                        if (!isNaN(date.getTime())) {
-                            publishedDate['date-parts'] = [[date.getFullYear(), date.getMonth() + 1, date.getDate()]];
-                        }
                     }
 
                     recentWorks.push({
@@ -313,8 +305,6 @@ Scopus utility for TiddlyWiki
                         author: authors.length > 0 ? authors : undefined,
                         'container-title': work['prism:publicationName'] ? [work['prism:publicationName']] : undefined,
                         publisher: work['dc:publisher'] || work['prism:publisher'] || undefined,
-                        'published-print': Object.keys(publishedDate).length > 0 ? publishedDate : undefined,
-                        published: Object.keys(publishedDate).length > 0 ? publishedDate : undefined,
                         'reference-count': work['citedby-count'] ? parseInt(work['citedby-count']) : undefined,
                         'is-referenced-by-count': work['citedby-count'] ? parseInt(work['citedby-count']) : undefined
                     });
@@ -348,6 +338,17 @@ Scopus utility for TiddlyWiki
             return null;
         }
 
+        // Get colleague name by author ID
+        function getColleagueNameByAuthorId(authorId) {
+            if (!authorId || authorId.length === 0) {
+                return null;
+            }
+            const tiddlers = $tw.wiki.filterTiddlers(`[tag[Colleague]search:scopus:regexp[${authorId}]]`);
+            if (tiddlers.length === 1) {
+                return tiddlers[0];
+            }
+            return null;
+        }
         return {
             isEnabled: isEnabled,
             cacheWorks: cacheWorks,

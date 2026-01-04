@@ -259,19 +259,6 @@ Web of Science utility for TiddlyWiki
                         });
                     }
                     
-                    // Extract publication date
-                    const publishedDate = {};
-                    if (work.source && work.source.publishYear) {
-                        const year = parseInt(work.source.publishYear);
-                        const month = work.source.publishMonth;
-                        if (month) {
-                            const monthNum = new Date(`${month} 1`).getMonth() + 1;
-                            publishedDate['date-parts'] = [[year, monthNum, 1]];
-                        } else {
-                            publishedDate['date-parts'] = [[year, 1, 1]];
-                        }
-                    }
-                    
                     recentWorks.push({
                         colleagueId: colleagueId,
                         doi: doi,
@@ -280,9 +267,6 @@ Web of Science utility for TiddlyWiki
                         publicationDate: workDate,
                         author: authors.length > 0 ? authors : undefined,
                         'container-title': work.source && work.source.sourceTitle ? [work.source.sourceTitle] : undefined,
-                        publisher: work.source && work.source.publisher ? work.source.publisher : undefined,
-                        'published-print': Object.keys(publishedDate).length > 0 ? publishedDate : undefined,
-                        published: Object.keys(publishedDate).length > 0 ? publishedDate : undefined,
                         'reference-count': work.references && work.references.count ? work.references.count : undefined,
                         'is-referenced-by-count': work.citations && work.citations.count ? work.citations.count : undefined
                     });

@@ -41,6 +41,8 @@ Reference widget for TiddlyWiki
         containerDom.id = this.uuid;
         parent.insertBefore(containerDom, nextSibling);
 
+        var current_tiddler = this.getAttribute("tiddler", this.getVariable("currentTiddler"));
+        
         var days = this.getAttribute("days") || 90;
         const count = this.getAttribute("count") || false;
         fetch(`/literatures/latest?days=${days}`)
@@ -58,7 +60,7 @@ Reference widget for TiddlyWiki
                     countDiv.textContent = results.items.length;
                     innerHTML = countDiv;
                 } else {
-                    innerHTML = literature.cardFromDOIs(results.items);
+                    innerHTML = literature.cardFromDOIs(results.items, current_tiddler);
                 }
                 if (innerHTML) {
                     containerDom.appendChild(innerHTML);
