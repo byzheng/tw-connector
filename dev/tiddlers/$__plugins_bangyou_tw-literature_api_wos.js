@@ -254,7 +254,8 @@ Web of Science utility for TiddlyWiki
                             authors.push({
                                 given: given,
                                 family: family,
-                                researcherId: author.researcherId || undefined
+                                researcherId: author.researcherId || undefined,
+                                colleague: getColleagueNameByResearcherId(author.researcherId || undefined)
                             });
                         });
                     }
@@ -274,6 +275,17 @@ Web of Science utility for TiddlyWiki
             }
             console.log("Recent works from Web of Science:", recentWorks.length);
             return recentWorks;
+        }
+        // Get colleague name by author ID
+        function getColleagueNameByResearcherId(researcherid) {
+            if (!researcherid || researcherid.length === 0) {
+                return null;
+            }
+            const tiddlers = $tw.wiki.filterTiddlers(`[tag[Colleague]search:researcherid:regexp[${researcherid}]]`);
+            if (tiddlers.length === 1) {
+                return tiddlers[0];
+            }
+            return null;
         }
         return {
             isEnabled: isEnabled,
