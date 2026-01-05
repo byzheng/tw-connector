@@ -10,6 +10,7 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
     if (!$tw.node) return;
 
     const cacheHelper = require('$:/plugins/bangyou/tw-literature/api/cachehelper.js').cacheHelper("scholar", 9999999);
+    const crossref = require('$:/plugins/bangyou/tw-literature/api/crossref.js').Crossref();
     const platform_field = "google-scholar"; // This should be a Google Scholar ID or URL
 
     // Keys to track
@@ -86,7 +87,7 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
         function cacheWorks(id, works) {
             
             if (!isEnabled()) {
-                return;
+                return Promise.resolve();
             }
             if (!id) {
                 throw new Error("Invalid ID");
@@ -99,11 +100,9 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
             // Get today's date in YYYY-MM-DD format
             const today = new Date().toISOString().split('T')[0];
 
-            let updatedItems = [];
-
             // Go through all items in works and update access-date based on cached data
             if (works && Array.isArray(works)) {
-                works.forEach(workItem => {
+                const promises = works.map(workItem => {
                     if (workItem && workItem.cites) {
                         // Find matching item in cached based on cites
                         const cachedMatch = cached && Array.isArray(cached) 
@@ -119,17 +118,38 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
                             workItem['access-date'] = today;
                         }
                         
-                        updatedItems.push(workItem);
+                        if (cachedMatch && cachedMatch['doi'] && cachedMatch['doi-similarity']) {
+                            workItem['doi'] = cachedMatch['doi'];
+                            workItem['doi-similarity'] = cachedMatch['doi-similarity'];
+                            return Promise.resolve(workItem);
+                        } else {
+                            // DOI lookup is async, wait for it to complete
+                            return crossref.findDOI(workItem.title, workItem.author, workItem.publisher).then(data => {
+                                workItem['doi'] = data.doi;
+                                workItem['doi-similarity'] = data.similarity;
+                                return workItem;
+                            }).catch(err => {
+                                console.error('Error finding DOI:', err);
+                                return workItem;
+                            });
+                        }
                     }
+                    return Promise.resolve(null);
                 });
-                // Cache the updated works
-                cacheHelper.addEntry(id, updatedItems);
-                clearPending(id);
-                return; 
+
+                return Promise.all(promises).then(updatedItems => {
+                    // Filter out null items and log
+                    const validItems = updatedItems.filter(item => item !== null);
+                    validItems.forEach(item => console.log(JSON.stringify(item)));
+                    
+                    // Cache the updated works
+                    cacheHelper.addEntry(id, validItems);
+                    clearPending(id);
+                });
             } else if (!works || !Array.isArray(works)) {
                 // If works is null or not an array, mark as pending
                 addPending(id);
-                return;
+                return Promise.resolve();
             }
         }
 
@@ -212,6 +232,72 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
             return matchingTiddlers;
         }
 
+        // Get latest works within the past 'days' days
+        function getLatest(days = 90) {
+            if (!isEnabled()) {
+                return Promise.resolve([]);
+            }
+            
+            // Get cached map of authorId -> colleague name for fast lookup
+            //const authoridToColleague = getAuthorIdToColleagueMap();
+            
+            const works = cacheHelper.getCaches();
+            const cutoffDate = new Date();
+            cutoffDate.setDate(cutoffDate.getDate() - days);
+
+            const promises = [];
+
+            for (const authorId in works) {
+                if (authorId === pendingKey) {
+                    continue;
+                }
+                
+                if (!Object.prototype.hasOwnProperty.call(works, authorId)) {
+                    continue;
+                }
+                const authorWorks = works[authorId];
+                if (!Array.isArray(authorWorks.item)) {
+                    continue;
+                }
+                console.log(authorWorks.item.length)
+                for (const work of authorWorks.item) {
+                    if (!work || !work.doi) {
+                        continue;
+                    }
+                    const promise = crossref.getWorksByDOI(work.doi, true).then(workCF => {
+                        if (!workCF) {
+                            return null;
+                        }
+                        //console.log(JSON.stringify(workCF.message, null, 2));
+                        if (!workCF.message){
+                            return null;
+                        }
+                        if (!workCF.message.publicationDate) {
+                            return null;
+                        }
+                        
+                        const workDate = workCF.message.publicationDate;
+                        
+                        if (isNaN(workDate.getTime()) || workDate < cutoffDate) {
+                            return null;
+                        }
+                    
+                        return workCF.message;
+                    }).catch(err => {
+                        console.error('Error fetching work by DOI:', err);
+                        return null;
+                    });
+                    promises.push(promise);
+                }
+            }
+            
+            return Promise.all(promises).then(results => {
+                const recentWorks = results.filter(work => work !== null);
+                console.log("Recent works from Google Scholar:", recentWorks.length);
+                return recentWorks;
+            });
+        }
+
         return {
             isEnabled,
             getStatus,
@@ -220,6 +306,7 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
             getWorks,
             addPending,
             getAuthorByDOI,
+            getLatest,
             getPlatformField: () => platform_field,
             removeExpiredEntries: removeExpiredEntries
         };

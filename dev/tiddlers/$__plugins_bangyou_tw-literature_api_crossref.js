@@ -101,18 +101,30 @@ Crossref API utility for TiddlyWiki
             return result;
         }
 
+        function convertDatePartsToDate(dateObj) {
+            if (!dateObj || !dateObj['date-parts'] || !Array.isArray(dateObj['date-parts']) || dateObj['date-parts'].length === 0) {
+                return null;
+            }
+            const parts = dateObj['date-parts'][0];
+            if (!parts || parts.length === 0) {
+                return null;
+            }
+            const year = parts[0];
+            const month = parts[1] ? parts[1] - 1 : 0; // JavaScript months are 0-indexed
+            const day = parts[2] ? parts[2] : 1;
+            return new Date(year, month, day);
+        }
+
         function simplifyWorkData(workData) {
             const data = workData.message;
-            
             return {
                 message: {
+                    doi: data.DOI,
                     title: data.title,
                     author: data.author,
                     'container-title': data['container-title'],
                     publisher: data.publisher,
-                    'published-online': data['published-online'],
-                    'published-print': data['published-print'],
-                    published: data.published,
+                    publicationDate: convertDatePartsToDate(data['published']),
                     'reference-count': data['reference-count'],
                     'is-referenced-by-count': data['is-referenced-by-count']
                 }
