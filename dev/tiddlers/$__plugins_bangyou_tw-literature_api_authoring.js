@@ -239,7 +239,7 @@ module-type: library
             uniqueItems.sort((a, b) => {
                 const dateA = a.publicationDate || new Date(0);
                 const dateB = b.publicationDate || new Date(0);
-                return dateB - dateA;
+                return dateA - dateB;
             });
             return uniqueItems;
         }
