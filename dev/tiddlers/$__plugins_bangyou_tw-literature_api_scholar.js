@@ -125,6 +125,9 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
                         } else {
                             // DOI lookup is async, wait for it to complete
                             return crossref.findDOI(workItem.title, workItem.author, workItem.publisher).then(data => {
+                                if (!data || !data.doi) {
+                                    return workItem;
+                                }
                                 workItem['doi'] = data.doi;
                                 workItem['doi-similarity'] = data.similarity;
                                 return workItem;
@@ -233,9 +236,9 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
         }
 
         // Get latest works within the past 'days' days
-        function getLatest(days = 90) {
+        async function getLatest(days = 90) {
             if (!isEnabled()) {
-                return Promise.resolve([]);
+                return [];
             }
             
             // Get cached map of authorId -> colleague name for fast lookup
@@ -245,7 +248,7 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
             const cutoffDate = new Date();
             cutoffDate.setDate(cutoffDate.getDate() - days);
 
-            const promises = [];
+            const recentWorks = [];
 
             for (const authorId in works) {
                 if (authorId === pendingKey) {
@@ -259,43 +262,38 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
                 if (!Array.isArray(authorWorks.item)) {
                     continue;
                 }
-                console.log(authorWorks.item.length)
                 for (const work of authorWorks.item) {
                     if (!work || !work.doi) {
                         continue;
                     }
-                    const promise = crossref.getWorksByDOI(work.doi, true).then(workCF => {
-                        if (!workCF) {
-                            return null;
+                    
+                    try {
+                        const workCF = await crossref.getWorksByDOI(work.doi, true);
+                        
+                        if (!workCF || !workCF.message) {
+                            continue;
                         }
-                        //console.log(JSON.stringify(workCF.message, null, 2));
-                        if (!workCF.message){
-                            return null;
-                        }
+                        
                         if (!workCF.message.publicationDate) {
-                            return null;
+                            continue;
                         }
                         
                         const workDate = workCF.message.publicationDate;
                         
                         if (isNaN(workDate.getTime()) || workDate < cutoffDate) {
-                            return null;
+                            continue;
                         }
-                    
-                        return workCF.message;
-                    }).catch(err => {
+                        let workScholar = workCF.message;
+                        workScholar.platform = "Google Scholar";
+                        recentWorks.push(workScholar);
+                    } catch (err) {
                         console.error('Error fetching work by DOI:', err);
-                        return null;
-                    });
-                    promises.push(promise);
+                    }
                 }
             }
             
-            return Promise.all(promises).then(results => {
-                const recentWorks = results.filter(work => work !== null);
-                console.log("Recent works from Google Scholar:", recentWorks.length);
-                return recentWorks;
-            });
+            console.log("Recent works from Google Scholar:", recentWorks.length);
+            return recentWorks;
         }
 
         return {

@@ -69,7 +69,7 @@ module-type: route
 	exports.platforms = ["node"];
 	exports.path = /^\/literatures\/latest$/;
 
-	exports.handler = function (request, response, state) {
+	exports.handler = async function (request, response, state) {
 		try {
 			// Check if queryParameters exists and has days parameter
 			let days = 60; // default value
@@ -79,7 +79,7 @@ module-type: route
 					days = parsedDays;
 				}
 			}
-			const results = authoring.getLatest(days);
+			const results = await authoring.getLatest(days);
 			response.writeHead(200, { "Content-Type": "application/json" });
 			response.end(JSON.stringify({
 				"status": "success",

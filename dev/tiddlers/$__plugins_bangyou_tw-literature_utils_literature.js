@@ -316,7 +316,8 @@ function Literature() {
                         crossrefData = crossrefCache.get(cleanDoi);
                     } else if (currentItem.platform === "Web of Science" || 
                         currentItem.platform === "Scopus" ||
-                        currentItem.platform === "OpenAlex") {
+                        currentItem.platform === "OpenAlex"||
+                        currentItem.platform === "Google Scholar") {
                         crossrefData = currentItem;
                     } else {
                         const response = await fetch(`literature/crossref/${encodeURIComponent(cleanDoi)}`);

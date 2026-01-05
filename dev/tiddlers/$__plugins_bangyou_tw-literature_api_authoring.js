@@ -185,7 +185,7 @@ module-type: library
             return authors;
         }
 
-        function getLatest(days) {
+        async function getLatest(days) {
             if (!days || typeof days !== 'number' || days <= 0) {
                 throw new Error('Invalid days parameter: must be a positive number');
             }
@@ -210,7 +210,7 @@ module-type: library
                     if (typeof platform.getLatest !== 'function') {
                         continue;
                     }
-                    const items = platform.getLatest(days);
+                    const items = await platform.getLatest(days);
                     if (items && Array.isArray(items)) {
                         // Filter out items that have been marked as read
                         const unreadItems = items.filter(item => {
@@ -241,6 +241,7 @@ module-type: library
                 const dateB = b.publicationDate || new Date(0);
                 return dateA - dateB;
             });
+            console.log(`Total latest items from all platforms (unread): ${uniqueItems.length}`);
             return uniqueItems;
         }
 
