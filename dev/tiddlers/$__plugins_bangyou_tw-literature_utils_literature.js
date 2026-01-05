@@ -156,6 +156,21 @@ function Literature() {
 
     const crossrefCache = new Map();
 
+    // Helper function to get and scale SVG icon from tiddler
+    function getSvgIcon(tiddlerPath, fallbackEmoji = '', size = '1.4em') {
+        if (typeof $tw !== 'undefined' && $tw.wiki) {
+            const svgContent = $tw.wiki.getTiddlerText(tiddlerPath);
+            if (svgContent) {
+                // Remove fixed width/height and add CSS to scale with font size
+                return svgContent
+                    .replace(/width="[^"]*"/, `width="${size}"`)
+                    .replace(/height="[^"]*"/, `height="${size}"`)
+                    .replace(/<svg/, '<svg style="vertical-align: middle; display: inline-block;"');
+            }
+        }
+        return fallbackEmoji;
+    }
+
     function cardFromDOIs(items, current_tiddler) {
         let result = document.createElement('div');
         result.className = "tw-literature-list";
@@ -397,6 +412,10 @@ function Literature() {
                                     filterParts.push(`[tag[Colleague]search:orcid:regexp[${orcidClean}]]`);
                                 }
                                 
+                                if (author.openalexId) {
+                                    filterParts.push(`[tag[Colleague]search:openalex:regexp[${author.openalexId}]]`);
+                                }
+
                                 // Run single filter with all conditions (OR logic)
                                 if (filterParts.length > 0) {
                                     const filter = filterParts.join(' ');
@@ -442,7 +461,7 @@ function Literature() {
                                 orcidLink.target = '_blank';
                                 orcidLink.className = 'tw-literature-author-orcid';
                                 orcidLink.title = 'ORCID';
-                                orcidLink.textContent = ' 🆔';
+                                orcidLink.innerHTML = ' ' + getSvgIcon('$:/plugins/bangyou/tw-literature/images/orcid', '🆔');
                                 authorSpan.appendChild(orcidLink);
                             }
                             if (author.researcherId) {
@@ -451,7 +470,7 @@ function Literature() {
                                 wosLink.target = '_blank';
                                 wosLink.className = 'tw-literature-author-orcid';
                                 wosLink.title = 'Web of Science';
-                                wosLink.textContent = ' 🔬';
+                                wosLink.innerHTML = ' ' + getSvgIcon('$:/plugins/bangyou/tw-literature/images/researcherid', '🔬');
                                 authorSpan.appendChild(wosLink);
                             }
                             if (author.authorId) {
@@ -460,8 +479,18 @@ function Literature() {
                                 scopusLink.target = '_blank';
                                 scopusLink.className = 'tw-literature-author-orcid';
                                 scopusLink.title = 'Scopus';
-                                scopusLink.textContent = ' 🔍';
+                                scopusLink.innerHTML = ' ' + getSvgIcon('$:/plugins/bangyou/tw-literature/images/scopus', ' 🔍');
                                 authorSpan.appendChild(scopusLink);
+                            }
+                            
+                            if (author.openalexId) {
+                                const openalexLink = document.createElement('a');
+                                openalexLink.href = `https://openalex.org/${author.openalexId}`;
+                                openalexLink.target = '_blank';
+                                openalexLink.className = 'tw-literature-author-orcid';
+                                openalexLink.title = 'OpenAlex';
+                                openalexLink.innerHTML = ' ' + getSvgIcon('$:/plugins/bangyou/tw-literature/images/openalex', ' 🌐');
+                                authorSpan.appendChild(openalexLink);
                             }
                             
                             authorsContainer.appendChild(authorSpan);

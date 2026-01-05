@@ -181,13 +181,15 @@ OpenAlex API utility for TiddlyWiki with timestamped caching
 
         function extractOpenAlexId(url) {
             if (typeof url !== "string") return null;
-            const match = url.match(/openalex\.org\/(W\d+)/i);
-            // Handle both author IDs (A followed by numbers) and work IDs (W followed by numbers)
+            url = url.toLowerCase();
+            // Handle filter URL format: openalex.org/works?filter=authorships.author.id:
             if (url.includes('openalex.org/works?filter=authorships.author.id:')) {
                 const match = url.match(/authorships\.author\.id:(a\d+)/i);
                 return match ? match[1] : null;
             }
-            // Handle direct OpenAlex URLs with work or author IDs
+            
+            // Handle direct OpenAlex URLs with author IDs (A) or work IDs (W)
+            const match = url.match(/openalex\.org\/([aw]\d+)/i);
             return match ? match[1] : null;
         }
 
@@ -249,13 +251,11 @@ OpenAlex API utility for TiddlyWiki with timestamped caching
                 return results;
             }
             const openalexId = extractOpenAlexId(workData.id);
-            console.log(`Extracted OpenAlex ID for DOI ${doi}: ${openalexId}`);
             if (!openalexId) {
                 console.warn(`No OpenAlex ID found for DOI: ${doi}`);
                 return results;
             }
             const url = `https://api.openalex.org/works?filter=cites:${encodeURIComponent(openalexId)}`;
-            console.log(`Fetching citing works for DOI: ${doi} (${openalexId}) from ${url}`);
             try {
                 const response = await fetch(url);
                 if (!response.ok) {
@@ -396,11 +396,10 @@ OpenAlex API utility for TiddlyWiki with timestamped caching
                     const authors = [];
                     if (work.authorships && Array.isArray(work.authorships)) {
                         work.authorships.forEach(author => {
-                            
                             authors.push({
                                 given: author.author['display_name']|| "",
                                 family: " ",
-                                openalexId: author.author['id'] || undefined,
+                                openalexId: extractOpenAlexId(author.author['id']) || undefined,
                                 ORCID: author.author['orcid'] || undefined
                             });
                         });
