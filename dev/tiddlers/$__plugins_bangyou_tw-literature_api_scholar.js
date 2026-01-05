@@ -84,6 +84,20 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
                 pending: getPending()
             };
         }
+
+        function incrementCheckHits(workItem) {
+            if (workItem['check-hits'] === undefined) {
+                workItem['check-hits'] = 1;
+            } else {
+                workItem['check-hits'] += 1;
+            }
+            return workItem;
+        }
+
+        function shouldSkipDOILookup(workItem, maxHits = 10) {
+            return workItem['check-hits'] !== undefined && workItem['check-hits'] >= maxHits;
+        }
+
         function cacheWorks(id, works) {
             
             if (!isEnabled()) {
@@ -117,14 +131,21 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
                         } else {
                             workItem['access-date'] = today;
                         }
-                        
+                        if (cachedMatch && cachedMatch['check-hits']) {
+                            workItem['check-hits'] = cachedMatch['check-hits'];
+                        }
                         if (cachedMatch && cachedMatch['doi'] && cachedMatch['doi-similarity']) {
                             workItem['doi'] = cachedMatch['doi'];
                             workItem['doi-similarity'] = cachedMatch['doi-similarity'];
+                            workItem['check-hits'] = cachedMatch['check-hits'];
+                            return Promise.resolve(workItem);
+                        } else if (shouldSkipDOILookup(workItem)) {
+                            console.log('Skipping DOI lookup after max hits for:', workItem.title);
                             return Promise.resolve(workItem);
                         } else {
                             // DOI lookup is async, wait for it to complete
                             return crossref.findDOI(workItem.title, workItem.author, workItem.publisher).then(data => {
+                                workItem = incrementCheckHits(workItem);
                                 if (!data || !data.doi) {
                                     return workItem;
                                 }
@@ -143,7 +164,7 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
                 return Promise.all(promises).then(updatedItems => {
                     // Filter out null items and log
                     const validItems = updatedItems.filter(item => item !== null);
-                    validItems.forEach(item => console.log(JSON.stringify(item)));
+                    // validItems.forEach(item => console.log(JSON.stringify(item)));
                     
                     // Cache the updated works
                     cacheHelper.addEntry(id, validItems);

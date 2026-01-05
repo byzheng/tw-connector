@@ -86,8 +86,6 @@ ORCID utility for TiddlyWiki
                 return works;
             }
             works = data.group.map(g => {
-                console.log("Working group: ")
-                console.log(JSON.stringify(g, null, 2)); 
                 const workSummary = g['work-summary'] && g['work-summary'][0] ? g['work-summary'][0] : {};
                 const doi = (() => {
                     // Try the first format (externalIds.externalId)
