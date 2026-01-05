@@ -391,13 +391,31 @@ OpenAlex API utility for TiddlyWiki with timestamped caching
                         continue;
                     }
                     const doi = work.doi;
+
+                    // Extract and format authors
+                    const authors = [];
+                    if (work.authorships && Array.isArray(work.authorships)) {
+                        work.authorships.forEach(author => {
+                            
+                            authors.push({
+                                given: author.author['display_name']|| "",
+                                family: " ",
+                                openalexId: author.author['id'] || undefined,
+                                ORCID: author.author['orcid'] || undefined
+                            });
+                        });
+                    }
                     recentWorks.push({
                         colleagueId: colleagueId,
                         // work: work,
                         doi: doi,
                         title: work.title ? work.title : "",
                         publicationDate: workDate,
-                        platform: "OpenAlex" 
+                        platform: "OpenAlex",
+                        author: authors.length > 0 ? authors : undefined,
+                        'container-title': work.primary_location.source && work.primary_location.source && work.primary_location.source.display_name ? [work.primary_location.source.display_name] : undefined,
+                        'reference-count': undefined,
+                        'is-referenced-by-count': undefined
                     });
                 }
             }

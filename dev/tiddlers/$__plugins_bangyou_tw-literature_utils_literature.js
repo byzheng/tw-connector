@@ -299,7 +299,9 @@ function Literature() {
                     // Check if data is already cached
                     if (crossrefCache.has(cleanDoi)) {
                         crossrefData = crossrefCache.get(cleanDoi);
-                    } else if (currentItem.platform === "Web of Science" || currentItem.platform === "Scopus") {
+                    } else if (currentItem.platform === "Web of Science" || 
+                        currentItem.platform === "Scopus" ||
+                        currentItem.platform === "OpenAlex") {
                         crossrefData = currentItem;
                     } else {
                         const response = await fetch(`literature/crossref/${encodeURIComponent(cleanDoi)}`);
@@ -498,12 +500,13 @@ function Literature() {
                         journalSection.appendChild(publisherSpan);
                     }
                     
-                    const pubDate = data['publicationDate'] || data['published-print'] || data.published;
-                    if (pubDate?.['date-parts']?.[0]) {
-                        const year = pubDate['date-parts'][0][0];
-                        const month = pubDate['date-parts'][0][1];
-                        const day = pubDate['date-parts'][0][2];
-                        
+                    const pubDate = data['publicationDate'];
+                    if (pubDate) {
+                        let year, month, day;
+                        const dateObj = new Date(pubDate);
+                        year = dateObj.getFullYear();
+                        month = dateObj.getMonth() + 1;
+                        day = dateObj.getDate();
                         const dateSpan = document.createElement('span');
                         dateSpan.className = 'tw-literature-date-badge';
                         dateSpan.textContent = month ? `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}` : year;
