@@ -121,15 +121,15 @@ Dependencies:
 
 		// Find DOI using the new function
 		crossrefApi.findDOI(title, author, publisher)
-			.then(doi => {
-				if (doi) {
+			.then(data => {
+				if (data && data.doi) {
 					// DOI found
 					response.writeHead(200, { "Content-Type": "application/json" });
 					response.end(JSON.stringify({
 						status: "success",
 						code: 200,
 						message: "DOI found successfully",
-						doi: doi,
+						results: data,
 						metadata: {
 							title: title,
 							author: author || null,

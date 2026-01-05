@@ -229,7 +229,7 @@ Crossref API utility for TiddlyWiki
                 // Return DOI if similarity is reasonable (>50% common words)
                 if (similarity > 0.5) {
                     console.log(`Found DOI: ${bestMatch.DOI} (similarity: ${(similarity * 100).toFixed(1)}%)`);
-                    return bestMatch.DOI;
+                    return {doi: bestMatch.DOI, similarity: similarity};
                 } else {
                     console.log(`Low similarity match (${(similarity * 100).toFixed(1)}%), skipping: ${matchTitle}`);
                     return null;
