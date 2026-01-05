@@ -147,10 +147,8 @@ Scopus utility for TiddlyWiki
             const query = `AU-ID(${authorId})`;
             const url = buildScopusApiUrl(path_scopus_search, { 
                 query: query,
-                count: 25,  // Results per page (API default/safe limit)
-                view: "COMPLETE"
+                count: 25
             });
-
             const response = await scopusRequest(url);
             if (!response || !response['search-results'] || !response['search-results'].entry) {
                 return [];
@@ -169,8 +167,7 @@ Scopus utility for TiddlyWiki
                     const nextUrl = buildScopusApiUrl(path_scopus_search, { 
                         query: query,
                         count: itemsPerPage,
-                        start: i * itemsPerPage,
-                        view: "COMPLETE"
+                        start: i * itemsPerPage
                     });
                     const pageResponse = await scopusRequest(nextUrl);
                     if (pageResponse && pageResponse['search-results'] && pageResponse['search-results'].entry) {
@@ -320,7 +317,7 @@ Scopus utility for TiddlyWiki
                             });
                         });
                     }
-                    
+                    console.log("DOI:", doi, "Date:", workDate.toISOString());
                     recentWorks.push({
                         colleagueId: authorId,
                         doi: doi,
