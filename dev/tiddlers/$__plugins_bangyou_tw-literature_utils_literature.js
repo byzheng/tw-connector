@@ -12,7 +12,7 @@ Utils functions
 
 function Literature() {
 
-    function createReadButton(cleanDoi, currentRefItem) {
+    function createReadButton(cleanDoi, currentRefItem, countElement) {
         const readButton = document.createElement('button');
         readButton.className = 'tw-literature-read-button';
         readButton.innerHTML = '✕';
@@ -45,6 +45,12 @@ function Literature() {
                     setTimeout(() => {
                         currentRefItem.style.display = 'none';
                     }, 500);
+                    
+                    // Update count if provided
+                    if (countElement) {
+                        const currentCount = parseInt(countElement.textContent.match(/\d+/)[0]);
+                        countElement.innerHTML = `Total: <span style="font-size: 20px; font-weight: bold; color: #212529;">${currentCount - 1}</span> items`;
+                    }
                     
                     // Update button to show success
                     readButton.innerHTML = '✓';
@@ -159,7 +165,21 @@ function Literature() {
         var openLinkFromInsideRiver = $tw.wiki.getTiddler("$:/config/Navigation/openLinkFromInsideRiver").fields.text;
         var openLinkFromOutsideRiver = $tw.wiki.getTiddler("$:/config/Navigation/openLinkFromOutsideRiver").fields.text;
         
+        // Create count header
+        const countHeader = document.createElement('div');
+        countHeader.className = 'tw-literature-count-header';
+        countHeader.style.padding = '8px 12px';
+        countHeader.style.background = '#f8f9fa';
+        countHeader.style.color = '#495057';
+        countHeader.style.fontWeight = '600';
+        countHeader.style.fontSize = '14px';
+        countHeader.style.borderRadius = '4px';
+        countHeader.style.marginBottom = '12px';
+        countHeader.style.border = '1px solid #dee2e6';
+        
         if (!Array.isArray(items) || items.length === 0) {
+            countHeader.innerHTML = `Total: <span style="font-size: 20px; font-weight: bold; color: #212529;">0</span> items`;
+            result.appendChild(countHeader);
             const emptyState = document.createElement('div');
             emptyState.className = 'tw-literature-empty-state';
             emptyState.innerHTML = `
@@ -169,6 +189,10 @@ function Literature() {
             result.appendChild(emptyState);
             return result;
         }
+        
+        // Set initial count
+        countHeader.innerHTML = `Total: <span style="font-size: 20px; font-weight: bold; color: #212529;">${items.length}</span> items`;
+        result.appendChild(countHeader);
 
         // Process items in batches for progressive rendering
         const BATCH_SIZE = 2;
@@ -246,7 +270,7 @@ function Literature() {
                 result.appendChild(refItem);
                 
                 // Fetch and render item data
-                renderItem(item, refItem, doiLink, titleItem, authorsDiv, story, current_tiddler, openLinkFromInsideRiver, openLinkFromOutsideRiver);
+                renderItem(item, refItem, doiLink, titleItem, authorsDiv, story, current_tiddler, openLinkFromInsideRiver, openLinkFromOutsideRiver, countHeader);
             }
             
             currentIndex = batchEnd;
@@ -264,7 +288,7 @@ function Literature() {
     }
     
     // Separate function to render individual item (called synchronously, fetches async)
-    function renderItem(currentItem, currentRefItem, currentDoiLink, currentTitleItem, currentAuthorsDiv, story, current_tiddler, openLinkFromInsideRiver, openLinkFromOutsideRiver) {
+    function renderItem(currentItem, currentRefItem, currentDoiLink, currentTitleItem, currentAuthorsDiv, story, current_tiddler, openLinkFromInsideRiver, openLinkFromOutsideRiver, countElement) {
         // Fetch data from crossref API (this is async and won't block)
         (async () => {
                 try {
@@ -300,7 +324,7 @@ function Literature() {
                     currentRefItem.innerHTML = '';
                     
                     // Create read button
-                    const readButton = createReadButton(cleanDoi, currentRefItem);
+                    const readButton = createReadButton(cleanDoi, currentRefItem, countElement);
                     currentRefItem.appendChild(readButton);
                     
                     // Create main content container
@@ -531,7 +555,7 @@ function Literature() {
                     
                     // Create read button for fallback case too
                     const cleanDoi = currentItem.doi.replace('https://doi.org/', '').replace('http://doi.org/', '');
-                    const readButton = createReadButton(cleanDoi, currentRefItem);
+                    const readButton = createReadButton(cleanDoi, currentRefItem, countElement);
                     currentRefItem.appendChild(readButton);
                     
                     const fallbackContent = document.createElement('div');
