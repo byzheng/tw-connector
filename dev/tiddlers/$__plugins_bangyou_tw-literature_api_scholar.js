@@ -114,70 +114,47 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
             // Get today's date in YYYY-MM-DD format
             const today = new Date().toISOString().split('T')[0];
 
-            // Go through all items in works and update access-date based on cached data
-            if (works && Array.isArray(works)) {
-                const promises = works.map(workItem => {
-                    if (workItem && workItem.cites) {
-                        // Find matching item in cached based on cites
-                        const cachedMatch = cached && Array.isArray(cached) 
-                            ? cached.find(cachedItem => cachedItem && cachedItem.cites === workItem.cites)
-                            : null;
-                        // Use cached access-date if exists, otherwise use today or construct from workItem.year
-                        if (cachedMatch && cachedMatch['access-date']) {
-                            workItem['access-date'] = cachedMatch['access-date'];
-                        } else if (workItem.year) {
-                            // Use workItem.year with January 1st
-                            workItem['access-date'] = `${workItem.year}-${String(new Date().getMonth() + 1).padStart(2, '0')}-01`;
-                        } else {
-                            workItem['access-date'] = today;
-                        }
-                        if (cachedMatch && cachedMatch['check-hits']) {
-                            workItem['check-hits'] = cachedMatch['check-hits'];
-                        }
-                        if (cachedMatch && cachedMatch['doi'] && cachedMatch['doi-similarity']) {
-                            workItem['doi'] = cachedMatch['doi'];
-                            workItem['doi-similarity'] = cachedMatch['doi-similarity'];
-                            workItem['check-hits'] = cachedMatch['check-hits'];
-                            return Promise.resolve(workItem);
-                        } else if (shouldSkipDOILookup(workItem)) {
-                            console.log('Skipping DOI lookup after max hits for:', workItem.title);
-                            return Promise.resolve(workItem);
-                        } else {
-                            // DOI lookup is async, wait for it to complete
-                            return crossref.findDOI(workItem.title, workItem.author, workItem.publisher).then(data => {
-                                workItem = incrementCheckHits(workItem);
-                                if (!data || !data.doi) {
-                                    return workItem;
-                                }
-                                workItem['doi'] = data.doi;
-                                workItem['doi-similarity'] = data.similarity;
-                                return workItem;
-                            }).catch(err => {
-                                console.error('Error finding DOI:', err);
-                                return workItem;
-                            });
-                        }
-                    }
-                    return Promise.resolve(null);
-                });
-
-                return Promise.all(promises).then(updatedItems => {
-                    // Filter out null items and log
-                    const validItems = updatedItems.filter(item => item !== null);
-                    // validItems.forEach(item => console.log(JSON.stringify(item)));
-                    
-                    // Cache the updated works
-                    cacheHelper.addEntry(id, validItems);
-                    clearPending(id);
-                });
-            } else if (!works || !Array.isArray(works)) {
-                // If works is null or not an array, mark as pending
+            if (!(works && Array.isArray(works))) {
                 addPending(id);
-                return Promise.resolve();
+                return;
             }
+            for (const work of works) {
+                if (!work) {
+                    continue;
+                }
+                const cachedMatch = cached && Array.isArray(cached) 
+                        ? cached.find(cachedItem => cachedItem && cachedItem.cites === work.cites)
+                        : null;
+                // Assign access date
+                if (cachedMatch && cachedMatch['access-date']) {
+                    work['access-date'] = cachedMatch['access-date'];
+                } else if (work.year) {
+                    // Use work.year with January 1st
+                    work['access-date'] = `${work.year}-${String(new Date().getMonth() + 1).padStart(2, '0')}-01`;
+                } else {
+                    work['access-date'] = today;
+                }
+
+                if (cachedMatch && cachedMatch['doi'] && cachedMatch['doi-similarity']) {
+                    work['doi'] = cachedMatch['doi'];
+                    work['doi-similarity'] = cachedMatch['doi-similarity'];
+                    work['check-hits'] = cachedMatch['check-hits'];
+                } else if (shouldSkipDOILookup(work)) {
+                    console.log('Skipping DOI lookup after max hits for:', work.title);
+                } else {
+                    // DOI lookup is async, wait for it to complete
+                    let workCF = await crossref.findDOI(work.title, work.author, work.publisher);
+                    
+                    work = incrementCheckHits(work);
+                    if (!workCF || !workCF.doi) {
+                        continue;
+                    }
+                    work['doi'] = workCF.doi;
+                    work['doi-similarity'] = workCF.similarity;
+                }
+            }
+            cacheHelper.addEntry(id, works);
         }
-
-
         function getWorks(id) {
             if (!isEnabled()) {
                 return [];
@@ -300,7 +277,7 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
                         }
                         
                         const workDate = workCF.message.publicationDate;
-                        console.log("DOI:", work.doi, "Date:", workDate.toISOString());
+                        console.log("DOI:", workdoi, "Date:", workDate.toISOString());
                         if (isNaN(workDate.getTime()) || workDate < cutoffDate) {
                             continue;
                         }
