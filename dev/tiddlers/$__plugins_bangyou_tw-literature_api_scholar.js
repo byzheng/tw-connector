@@ -98,7 +98,7 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
             return workItem['check-hits'] !== undefined && workItem['check-hits'] >= maxHits;
         }
 
-        function cacheWorks(id, works) {
+        async function cacheWorks(id, works) {
             
             if (!isEnabled()) {
                 return Promise.resolve();
@@ -300,7 +300,7 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
                         }
                         
                         const workDate = workCF.message.publicationDate;
-                        
+                        console.log("DOI:", work.doi, "Date:", workDate.toISOString());
                         if (isNaN(workDate.getTime()) || workDate < cutoffDate) {
                             continue;
                         }

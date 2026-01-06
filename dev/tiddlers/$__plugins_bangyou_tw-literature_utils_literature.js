@@ -310,27 +310,39 @@ function Literature() {
                     const cleanDoi = currentItem.doi.replace('https://doi.org/', '').replace('http://doi.org/', '');
 
                     let crossrefData;
+                    const needsAuthorData = !currentItem.author || currentItem.author.length === 0;
+                    const isPlatformData = currentItem.platform === "Web of Science" || 
+                        currentItem.platform === "Scopus" ||
+                        currentItem.platform === "OpenAlex"||
+                        currentItem.platform === "Google Scholar";
                     
                     // Check if data is already cached
                     if (crossrefCache.has(cleanDoi)) {
                         crossrefData = crossrefCache.get(cleanDoi);
-                    } else if (currentItem.platform === "Web of Science" || 
-                        currentItem.platform === "Scopus" ||
-                        currentItem.platform === "OpenAlex"||
-                        currentItem.platform === "Google Scholar") {
+                    } else if (isPlatformData && !needsAuthorData) {
+                        // Use platform data directly only if it has author information
                         crossrefData = currentItem;
                     } else {
+                        // Fetch from crossref if not cached or if we need author data
                         const response = await fetch(`literature/crossref/${encodeURIComponent(cleanDoi)}`);
                         
                         if (!response.ok) {
                             throw new Error(`HTTP error! status: ${response.status}`);
                         }
                         
-                        crossrefData = await response.json();
-                        if (!crossrefData || !crossrefData.data || !crossrefData.data.message) {
+                        const fetchedData = await response.json();
+                        if (!fetchedData || !fetchedData.data || !fetchedData.data.message) {
                             throw new Error('Invalid crossref response structure');
                         }
-                        crossrefData = crossrefData.data.message;
+                        const crossrefMessage = fetchedData.data.message;
+                        
+                        // Merge crossref author data with platform data if needed
+                        if (isPlatformData && needsAuthorData && crossrefMessage.author) {
+                            crossrefData = { ...currentItem, author: crossrefMessage.author };
+                        } else {
+                            crossrefData = crossrefMessage;
+                        }
+                        
                         // Cache the successful response
                         crossrefCache.set(cleanDoi, crossrefData);
                     }

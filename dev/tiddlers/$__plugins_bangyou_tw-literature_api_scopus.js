@@ -317,7 +317,6 @@ Scopus utility for TiddlyWiki
                             });
                         });
                     }
-                    console.log("DOI:", doi, "Date:", workDate.toISOString());
                     recentWorks.push({
                         colleagueId: authorId,
                         doi: doi,
