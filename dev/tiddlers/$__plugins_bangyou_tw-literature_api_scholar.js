@@ -116,6 +116,7 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
                 addPending(id);
                 return;
             }
+            clearPending(id);
             for (let work of works) {
                 if (!work) {
                     continue;
@@ -182,7 +183,6 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
                 }
             }
             cacheHelper.addEntry(id, works);
-            clearPending(id);
         }
         function getWorks(id) {
             if (!isEnabled()) {
