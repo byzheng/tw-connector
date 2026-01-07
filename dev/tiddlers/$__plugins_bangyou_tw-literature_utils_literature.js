@@ -244,10 +244,16 @@ function Literature() {
                     
                     const errorRightInfo = document.createElement('div');
                     errorRightInfo.className = 'tw-literature-footer-right';
-                    const sourceSpan = document.createElement('span');
-                    sourceSpan.className = 'tw-literature-source-badge';
-                    sourceSpan.textContent = `🔗 ${item.platform || 'Unknown'}`;
-                    errorRightInfo.appendChild(sourceSpan);
+                    
+                    // Convert platform to array if needed and create badges
+                    const platforms = Array.isArray(item.platform) ? item.platform : [item.platform || 'Unknown'];
+                    platforms.forEach(platform => {
+                        const sourceSpan = document.createElement('span');
+                        sourceSpan.className = 'tw-literature-source-badge';
+                        sourceSpan.textContent = `🔗 ${platform}`;
+                        errorRightInfo.appendChild(sourceSpan);
+                    });
+                    
                     errorFooter.appendChild(errorRightInfo);
                     errorContent.appendChild(errorFooter);
                     
@@ -561,7 +567,9 @@ function Literature() {
                     const footer = document.createElement('div');
                     footer.className = 'tw-literature-footer';
                     footer.style.display = 'flex';
+                    footer.style.flexWrap = 'wrap';
                     footer.style.alignItems = 'center';
+                    footer.style.gap = '8px';
                     
                     const leftInfo = document.createElement('div');
                     leftInfo.className = 'tw-literature-footer-left';
@@ -582,11 +590,21 @@ function Literature() {
                     
                     const rightInfo = document.createElement('div');
                     rightInfo.className = 'tw-literature-footer-right';
-                    rightInfo.style.marginLeft = 'auto';
-                    const sourceSpan = document.createElement('span');
-                    sourceSpan.className = 'tw-literature-source-badge';
-                    sourceSpan.textContent = `🔗 ${currentItem.platform}`;
-                    rightInfo.appendChild(sourceSpan);
+                    rightInfo.style.display = 'flex';
+                    rightInfo.style.flexWrap = 'wrap';
+                    rightInfo.style.gap = '6px';
+                    rightInfo.style.width = '100%';
+                    rightInfo.style.marginTop = '4px';
+                    
+                    // Convert platform to array if needed and create badges
+                    const platforms = Array.isArray(currentItem.platform) ? currentItem.platform : [currentItem.platform];
+                    platforms.forEach(platform => {
+                        const sourceSpan = document.createElement('span');
+                        sourceSpan.className = 'tw-literature-source-badge';
+                        sourceSpan.textContent = `🔗 ${platform}`;
+                        rightInfo.appendChild(sourceSpan);
+                    });
+                    
                     footer.appendChild(rightInfo);
                     
                     contentContainer.appendChild(footer);
@@ -626,10 +644,16 @@ function Literature() {
                     
                     const fallbackRightInfo = document.createElement('div');
                     fallbackRightInfo.className = 'tw-literature-footer-right';
-                    const sourceSpan = document.createElement('span');
-                    sourceSpan.className = 'tw-literature-source-badge';
-                    sourceSpan.textContent = `🔗 ${currentItem.platform || 'Unknown'}`;
-                    fallbackRightInfo.appendChild(sourceSpan);
+                    
+                    // Convert platform to array if needed and create badges
+                    const platforms = Array.isArray(currentItem.platform) ? currentItem.platform : [currentItem.platform || 'Unknown'];
+                    platforms.forEach(platform => {
+                        const sourceSpan = document.createElement('span');
+                        sourceSpan.className = 'tw-literature-source-badge';
+                        sourceSpan.textContent = `🔗 ${platform}`;
+                        fallbackRightInfo.appendChild(sourceSpan);
+                    });
+                    
                     fallbackFooter.appendChild(fallbackRightInfo);
                     fallbackContent.appendChild(fallbackFooter);
                     

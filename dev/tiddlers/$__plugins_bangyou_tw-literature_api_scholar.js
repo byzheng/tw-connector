@@ -85,13 +85,11 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
             };
         }
 
-        function incrementCheckHits(workItem) {
-            if (workItem['check-hits'] === undefined) {
-                workItem['check-hits'] = 1;
-            } else {
-                workItem['check-hits'] += 1;
-            }
-            return workItem;
+        function incrementCheckHits(old) {
+            if (old === undefined) {
+                return 1;
+            } 
+            return old + 1;
         }
 
         function shouldSkipDOILookup(workItem, maxHits = 10) {
@@ -145,10 +143,11 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
                     // DOI lookup is async, wait for it to complete
                     let workCF = await crossref.findDOI(work.title, work.author, work.publisher);
                     
-                    work = incrementCheckHits(work);
+                    work['check-hits'] = incrementCheckHits(work['check-hits']);
                     if (!workCF || !workCF.doi) {
                         continue;
                     }
+                    console.log("Check hits:", work["check-hits"])
                     work['doi'] = workCF.doi;
                     work['doi-similarity'] = workCF.similarity;
                 }
@@ -277,7 +276,7 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
                         }
                         
                         const workDate = workCF.message.publicationDate;
-                        console.log("DOI:", workdoi, "Date:", workDate.toISOString());
+                        console.log("DOI:", work.doi, "Date:", workDate.toISOString());
                         if (isNaN(workDate.getTime()) || workDate < cutoffDate) {
                             continue;
                         }

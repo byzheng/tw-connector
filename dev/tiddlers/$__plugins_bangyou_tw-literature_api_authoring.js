@@ -224,16 +224,35 @@ module-type: library
                     console.error(`Error processing platform ${platform.constructor.name}:`, error);
                 }
             }
-            // Remove duplicates based on DOI before sorting
-            const uniqueItems = allItems.filter((item, index, self) => {
-                if (!item.doi) return true; // Keep items without DOI
+            // Merge duplicates based on DOI, combining platform info
+            const doiMap = new Map();
+            
+            for (const item of allItems) {
+                if (!item.doi) {
+                    // Keep items without DOI as-is
+                    doiMap.set(Symbol(), item);
+                    continue;
+                }
+                
                 const cleanDoi = item.doi.replace('https://doi.org/', '').replace('http://doi.org/', '');
-                return index === self.findIndex(other => {
-                    if (!other.doi) return false;
-                    const otherCleanDoi = other.doi.replace('https://doi.org/', '').replace('http://doi.org/', '');
-                    return otherCleanDoi === cleanDoi;
-                });
-            });
+                
+                if (doiMap.has(cleanDoi)) {
+                    // DOI exists, merge platform info
+                    const existing = doiMap.get(cleanDoi);
+                    if (Array.isArray(existing.platform)) {
+                        if (item.platform && !existing.platform.includes(item.platform)) {
+                            existing.platform.push(item.platform);
+                        }
+                    } else if (existing.platform && item.platform && existing.platform !== item.platform) {
+                        existing.platform = [existing.platform, item.platform];
+                    }
+                } else {
+                    // New DOI, add to map
+                    doiMap.set(cleanDoi, item);
+                }
+            }
+            
+            const uniqueItems = Array.from(doiMap.values());
             
             // Sort all items by publication date in descending order (newest first)
             uniqueItems.sort((a, b) => {
