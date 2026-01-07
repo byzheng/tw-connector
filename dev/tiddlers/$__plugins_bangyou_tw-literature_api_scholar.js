@@ -24,8 +24,14 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
                 return urlOrId;
             }
             // Otherwise, try to extract from a Google Scholar URL
-            const match = urlOrId.match(/[?&]user=([a-zA-Z0-9_-]+)/);
-            return match ? match[1] : null;
+            let match = urlOrId.match(/[?&]user=([a-zA-Z0-9_-]+)/);
+            if (!match) {
+                return null;
+            }
+            if (match[1] === "http" || match[1] === "https") {
+                return null;
+            }
+            return match[1];
         }
         function isEnabled() {
             let tiddler = $tw.wiki.getTiddler("$:/config/tw-literature/authoring/scholar/enable");
@@ -139,11 +145,16 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
             if (!id) {
                 throw new Error("Invalid ID format");
             }
+            // console.log("Adding pending for ID:", id);
             const cached = getWorks(id);
             // Get today's date in YYYY-MM-DD format
-            if (cached && Array.isArray(cached)) {
+            if (cached && Array.isArray(cached) && 
+                cached.item &&
+                cached.item.length > 0) {
+                // console.log("Cached works found, skipping adding pending for ID:", id);
                 return;
             }
+            // console.log("No cached works found, proceeding to add pending for ID:", id);
             addPending(id);
             return;
         }
