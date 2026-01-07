@@ -152,10 +152,9 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
                     work['access-date'] = today;
                 }
 
-                if (cachedMatch && cachedMatch['doi'] && cachedMatch['doi-similarity']) {
-                    work['doi'] = cachedMatch['doi'];
-                    work['doi-similarity'] = cachedMatch['doi-similarity'];
-                    work['check-hits'] = cachedMatch['check-hits'];
+                if (cachedMatch && cachedMatch['doi'] && cachedMatch['doi-similarity'] &&
+                    cachedMatch['publicationDate']) {
+                    Object.assign(work, JSON.parse(JSON.stringify(cachedMatch)));
                 } else if (shouldSkipDOILookup(work)) {
                     console.log('Skipping DOI lookup after max hits for:', work.title);
                 } else {
@@ -168,6 +167,18 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
                     }
                     work['doi'] = workCF.doi;
                     work['doi-similarity'] = workCF.similarity;
+                    // Get additional metadata from CrossRef
+                    const workCF2 = await crossref.getWorksByDOI(work.doi, true);
+                        
+                    if (!workCF2 || !workCF2.message) {
+                        continue;
+                    }
+                    
+                    if (!workCF2.message.publicationDate) {
+                        continue;
+                    }
+                    work.crossref = workCF2.message;
+                    work.publicationDate = workCF2.message.publicationDate;
                 }
             }
             cacheHelper.addEntry(id, works);
@@ -282,29 +293,25 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
                     if (!work || !work.doi) {
                         continue;
                     }
-                    
-                    try {
-                        const workCF = await crossref.getWorksByDOI(work.doi, true);
-                        
-                        if (!workCF || !workCF.message) {
-                            continue;
-                        }
-                        
-                        if (!workCF.message.publicationDate) {
-                            continue;
-                        }
-                        
-                        const workDate = workCF.message.publicationDate;
-                        console.log("DOI:", work.doi, "Date:", workDate.toISOString());
-                        if (isNaN(workDate.getTime()) || workDate < cutoffDate) {
-                            continue;
-                        }
-                        let workScholar = workCF.message;
-                        workScholar.platform = "Google Scholar";
-                        recentWorks.push(workScholar);
-                    } catch (err) {
-                        console.error('Error fetching work by DOI:', err);
+                    let work2 = work.crossref
+                    if (!work2) {
+                        continue;
                     }
+                    if (!work2.publicationDate) {
+                        continue;
+                    }
+                    // console.log(JSON.stringify(work, null, 2));
+                    const workDate = work2.publicationDate instanceof Date 
+                        ? work2.publicationDate 
+                        : new Date(work2.publicationDate);
+                    if (!workDate) {
+                        continue;
+                    }
+                    if (isNaN(workDate.getTime()) || workDate < cutoffDate) {
+                        continue;
+                    }
+                    work2.platform = "Google Scholar";
+                    recentWorks.push(work2);
                 }
             }
             
