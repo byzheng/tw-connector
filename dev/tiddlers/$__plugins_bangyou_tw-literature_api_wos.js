@@ -23,6 +23,10 @@ Web of Science utility for TiddlyWiki
         const this_host = host.replace(/\/+$/, "");
         const path_document = "/apis/wos-starter/v1/documents"
         
+        // Rate limiting: 5 requests per second = 200ms between requests
+        let lastRequestTime = 0;
+        const MIN_REQUEST_INTERVAL = 250; // 250ms = 4 requests/sec (safer than 5)
+        
         // Cache the researcherId to colleague mapping
         let researcherIdToColleagueCache = null;
         
@@ -87,7 +91,7 @@ Web of Science utility for TiddlyWiki
             }
             return typeof countObj.item.count === "number" ? countObj.item.count : 0;
         }
-        async function wosRequest(url) {
+        async function wosRequest(url, retryCount = 0) {
             const currentCount = getDailyRequestCount();
             const wos_daily_limit = getWOSDailyLimit();
             if (currentCount >= wos_daily_limit) {
@@ -98,20 +102,51 @@ Web of Science utility for TiddlyWiki
                 console.error("Web of Science API key is not configured. Please set it in $:/config/tw-literature/api/wos tiddler.");
                 return;
             }
+            
+            // Rate limiting: ensure minimum time between requests
+            const now = Date.now();
+            const timeSinceLastRequest = now - lastRequestTime;
+            if (timeSinceLastRequest < MIN_REQUEST_INTERVAL) {
+                const waitTime = MIN_REQUEST_INTERVAL - timeSinceLastRequest;
+                await new Promise(resolve => setTimeout(resolve, waitTime));
+            }
+            lastRequestTime = Date.now();
+            
             const headers = {
                 "X-ApiKey": apiKey
             };
-            const response = await fetch(url, { headers });
-            const today = new Date().toISOString().slice(0, 10);
-            const countObj = { count: currentCount + 1, day: today };
-            //console.log(`Web of Science API request count for today (${today}): ${countObj.count}`);
-            cacheHelper.addEntry(wos_daily_request_count_key, countObj, undefined, false);
-            // Simulate a delay to avoid hitting rate limits too quickly
-            await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+            
+            try {
+                const response = await fetch(url, { headers });
+                
+                // Handle 429 rate limit errors with exponential backoff
+                if (response.status === 429) {
+                    const maxRetries = 3;
+                    if (retryCount < maxRetries) {
+                        const backoffDelay = Math.min(1000 * Math.pow(2, retryCount), 10000); // Max 10s
+                        console.log(`Rate limited (429). Retrying in ${backoffDelay}ms (attempt ${retryCount + 1}/${maxRetries})...`);
+                        await new Promise(resolve => setTimeout(resolve, backoffDelay));
+                        return await wosRequest(url, retryCount + 1);
+                    }
+                    throw new Error(`Rate limit exceeded after ${maxRetries} retries. Please wait before making more requests.`);
+                }
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const today = new Date().toISOString().slice(0, 10);
+                const countObj = { count: currentCount + 1, day: today };
+                cacheHelper.addEntry(wos_daily_request_count_key, countObj, undefined, false);
+                
+                return await response.json();
+            } catch (error) {
+                if (error.message.includes('HTTP error')) {
+                    throw error;
+                }
+                // Network errors or other issues
+                throw new Error(`Request failed: ${error.message}`);
             }
-            return response.json();
         }
 
 
