@@ -161,7 +161,7 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
                 } else {
                     // DOI lookup is async, wait for it to complete
                     let workCF = await crossref.findDOI(work.title, work.author, work.publisher);
-                    work['check-hits'] = incrementCheckHits(cachedMatch['check-hits']);
+                    work['check-hits'] = incrementCheckHits(cachedMatch?.['check-hits'] || work['check-hits'] || 0);
                     console.log("Check hits:", work["check-hits"])
                     if (!workCF || !workCF.doi) {
                         continue;
