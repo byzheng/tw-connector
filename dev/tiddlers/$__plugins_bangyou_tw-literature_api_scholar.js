@@ -116,7 +116,7 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
                 addPending(id);
                 return;
             }
-            for (const work of works) {
+            for (let work of works) {
                 if (!work) {
                     continue;
                 }
@@ -161,17 +161,17 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
                 } else {
                     // DOI lookup is async, wait for it to complete
                     let workCF = await crossref.findDOI(work.title, work.author, work.publisher);
-                    
-                    work['check-hits'] = incrementCheckHits(work['check-hits']);
+                    work['check-hits'] = incrementCheckHits(cachedMatch['check-hits']);
+                    console.log("Check hits:", work["check-hits"])
                     if (!workCF || !workCF.doi) {
                         continue;
                     }
-                    console.log("Check hits:", work["check-hits"])
                     work['doi'] = workCF.doi;
                     work['doi-similarity'] = workCF.similarity;
                 }
             }
             cacheHelper.addEntry(id, works);
+            clearPending(id);
         }
         function getWorks(id) {
             if (!isEnabled()) {

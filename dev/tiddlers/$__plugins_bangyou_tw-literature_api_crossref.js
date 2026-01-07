@@ -255,7 +255,7 @@ Crossref API utility for TiddlyWiki
                     console.log(`Found DOI: ${bestMatch.DOI} (similarity: ${(similarity * 100).toFixed(1)}%)`);
                     return {doi: bestMatch.DOI, similarity: similarity};
                 } else {
-                    console.log(`Low similarity match (${(similarity * 100).toFixed(1)}%), skipping: ${matchTitle}`);
+                    console.log(`Low similarity match (${(similarity * 100).toFixed(1)}%), skipping:`, metadata);
                     return null;
                 }
 
