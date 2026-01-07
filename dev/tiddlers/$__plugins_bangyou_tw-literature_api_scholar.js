@@ -120,9 +120,28 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
                 if (!work) {
                     continue;
                 }
-                const cachedMatch = cached && Array.isArray(cached) 
-                        ? cached.find(cachedItem => cachedItem && cachedItem.cites === work.cites)
+                
+                // Only search for cached match if work has identifying fields
+                let cachedMatch = null;
+                if (work.cites || work.title) {
+                    cachedMatch = cached && Array.isArray(cached) 
+                        ? cached.find(cachedItem => {
+                            if (!cachedItem) return false;
+                            
+                            // Match on cites if both have it
+                            if (work.cites && cachedItem.cites) {
+                                return cachedItem.cites === work.cites;
+                            }
+                            
+                            // Otherwise match on combination of other fields
+                            return cachedItem.title === work.title &&
+                                    cachedItem.author === work.author &&
+                                    cachedItem.publisher === work.publisher &&
+                                    cachedItem.year === work.year;
+                        })
                         : null;
+                }
+                
                 // Assign access date
                 if (cachedMatch && cachedMatch['access-date']) {
                     work['access-date'] = cachedMatch['access-date'];
