@@ -317,10 +317,14 @@ function Literature() {
 
                     let crossrefData;
                     const needsAuthorData = !currentItem.author || currentItem.author.length === 0;
-                    const isPlatformData = currentItem.platform === "Web of Science" || 
-                        currentItem.platform === "Scopus" ||
-                        currentItem.platform === "OpenAlex"||
-                        currentItem.platform === "Google Scholar";
+                    // Convert platform to array if needed and create badges
+                    const platforms = Array.isArray(currentItem.platform) ? currentItem.platform : [currentItem.platform];
+                    const isPlatformData = platforms.some(platform => 
+                        platform === "Web of Science" || 
+                        platform === "Scopus" ||
+                        platform === "OpenAlex" ||
+                        platform === "Google Scholar"
+                    );
                     
                     // Check if data is already cached
                     if (crossrefCache.has(cleanDoi)) {
@@ -596,8 +600,7 @@ function Literature() {
                     rightInfo.style.width = '100%';
                     rightInfo.style.marginTop = '4px';
                     
-                    // Convert platform to array if needed and create badges
-                    const platforms = Array.isArray(currentItem.platform) ? currentItem.platform : [currentItem.platform];
+                    
                     platforms.forEach(platform => {
                         const sourceSpan = document.createElement('span');
                         sourceSpan.className = 'tw-literature-source-badge';
