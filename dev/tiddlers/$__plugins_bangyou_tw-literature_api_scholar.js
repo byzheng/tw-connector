@@ -95,8 +95,39 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
         function shouldSkipDOILookup(workItem, maxHits = 10) {
             return workItem['check-hits'] !== undefined && workItem['check-hits'] >= maxHits;
         }
-
-        async function cacheWorks(id, works) {
+        
+        function getWorkByCites(cites) {
+            if (!cites) {
+                return;
+            }
+            
+            const caches = cacheHelper.getCaches();
+            if (!caches || Object.keys(caches).length === 0) {
+                return;
+            }
+            for (const authorId in caches) {
+                if (authorId === pendingKey) {
+                    continue;
+                }
+                if (!Object.prototype.hasOwnProperty.call(caches, authorId)) {
+                    continue;
+                }
+                
+                const cache = caches[authorId];
+                if (!cache.item || !Array.isArray(cache.item)) {
+                    continue;
+                }
+                
+                
+                // Find works with matching cites value
+                for (const work of cache.item) {
+                    if (work && work.cites === cites) {
+                        return work;
+                    }
+                }
+            }
+        }
+        async function cacheWorks(id) {
             
             if (!isEnabled()) {
                 return Promise.resolve();
@@ -110,21 +141,45 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
             }
             const cached = getWorks(id);
             // Get today's date in YYYY-MM-DD format
-            const today = new Date().toISOString().split('T')[0];
-
-            if (!(works && Array.isArray(works))) {
-                addPending(id);
+            if (cached && Array.isArray(cached)) {
                 return;
             }
+            addPending(id);
+            return;
+        }
+        async function performCacheWorks(id, works) {
+            if (!isEnabled()) {
+                return Promise.resolve();
+            }
+            if (!id) {
+                throw new Error("Invalid ID");
+            }
+            id = extractUserFromUrl(id);
+            if (!id) {
+                throw new Error("Invalid ID format");
+            }
+            
+            if (!works || !Array.isArray(works)) {
+                throw new Error("Invalid works array");
+            }
+
+            const today = new Date().toISOString().split('T')[0];
+            const cached = getWorks(id);
+            // Clear pending status at the start
             clearPending(id);
-            for (let work of works) {
+            // Get cached works for this ID
+            for (let i = 0; i < works.length; i++) {
+                let work = works[i];
                 if (!work) {
                     continue;
                 }
                 
                 // Only search for cached match if work has identifying fields
                 let cachedMatch = null;
-                if (work.cites || work.title) {
+                if (work.cites) {
+                    cachedMatch = getWorkByCites(work.cites);
+                }
+                if (work.cites || work.title || !cachedMatch) {
                     cachedMatch = cached && Array.isArray(cached) 
                         ? cached.find(cachedItem => {
                             if (!cachedItem) return false;
@@ -142,6 +197,9 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
                         })
                         : null;
                 }
+                if (cachedMatch) {
+                    console.log('Found cached work:', cachedMatch.cites);
+                }
                 
                 // Assign access date
                 if (cachedMatch && cachedMatch['access-date']) {
@@ -152,11 +210,11 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
                 } else {
                     work['access-date'] = today;
                 }
-
                 if (cachedMatch && cachedMatch['doi'] && cachedMatch['doi-similarity'] &&
                     cachedMatch['publicationDate']) {
                     Object.assign(work, JSON.parse(JSON.stringify(cachedMatch)));
-                } else if (shouldSkipDOILookup(work)) {
+                    console.log('Using cached meta data for:', work.title);
+                } else if (cachedMatch && shouldSkipDOILookup(cachedMatch)) {
                     console.log('Skipping DOI lookup after max hits for:', work.title);
                 } else {
                     // DOI lookup is async, wait for it to complete
@@ -164,6 +222,8 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
                     work['check-hits'] = incrementCheckHits(cachedMatch?.['check-hits'] || work['check-hits'] || 0);
                     console.log("Check hits:", work["check-hits"])
                     if (!workCF || !workCF.doi) {
+                        // Cache progress even if DOI lookup fails
+                        cacheHelper.addEntry(id, works, Date.now(), false);
                         continue;
                     }
                     work['doi'] = workCF.doi;
@@ -172,17 +232,23 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
                     const workCF2 = await crossref.getWorksByDOI(work.doi, true);
                         
                     if (!workCF2 || !workCF2.message) {
+                        // Cache progress even if metadata fetch fails
+                        cacheHelper.addEntry(id, works, Date.now(), false);
                         continue;
                     }
                     
                     if (!workCF2.message.publicationDate) {
+                        // Cache progress even if publication date is missing
+                        cacheHelper.addEntry(id, works, Date.now(), false);
                         continue;
                     }
                     work.crossref = workCF2.message;
                     work.publicationDate = workCF2.message.publicationDate;
                 }
+                
+                // Cache after processing each item to preserve progress
+                cacheHelper.addEntry(id, works, Date.now(), false);
             }
-            cacheHelper.addEntry(id, works);
         }
         function getWorks(id) {
             if (!isEnabled()) {
@@ -324,6 +390,7 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
             getStatus,
             clearAllPending,
             cacheWorks,
+            performCacheWorks,
             getWorks,
             addPending,
             getAuthorByDOI,

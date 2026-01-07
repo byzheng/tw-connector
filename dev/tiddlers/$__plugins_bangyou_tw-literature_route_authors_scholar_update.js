@@ -26,7 +26,7 @@ exports.handler = async function (request, response, state) {
             }));
         }
 
-        scholar.cacheWorks(id, works);
+        scholar.performCacheWorks(id, works);
         response.writeHead(200, { "Content-Type": "application/json" });
         response.end(JSON.stringify({
             status: "success",
