@@ -184,7 +184,12 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
                 if (!work) {
                     continue;
                 }
-                
+                if (!work.year) {
+                    continue;
+                }
+                if (parseInt(work.year) < 2025) {
+                    continue;
+                }
                 // Only search for cached match if work has identifying fields
                 let cachedMatch = null;
                 if (work.cites) {
@@ -208,10 +213,6 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
                         })
                         : null;
                 }
-                if (cachedMatch) {
-                    console.log('Found cached work:', cachedMatch.cites);
-                }
-                
                 // Assign access date
                 if (cachedMatch && cachedMatch['access-date']) {
                     work['access-date'] = cachedMatch['access-date'];
@@ -260,6 +261,8 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
                 // Cache after processing each item to preserve progress
                 cacheHelper.addEntry(id, works, Date.now(), false);
             }
+            // Final cache update after all works processed
+            cacheHelper.addEntry(id, works);
         }
         function getWorks(id) {
             if (!isEnabled()) {
