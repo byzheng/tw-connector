@@ -148,10 +148,10 @@ Google Scholar utility for TiddlyWiki (via external Chrome extension)
             // console.log("Adding pending for ID:", id);
             const cached = getWorks(id);
             // Get today's date in YYYY-MM-DD format
-            if (cached && Array.isArray(cached) && 
-                cached.item &&
-                cached.item.length > 0) {
-                // console.log("Cached works found, skipping adding pending for ID:", id);
+            if (cached &&
+                Array.isArray(cached) && 
+                cached.length > 0) {
+                console.log("Cached works found, skipping adding pending for ID:", id);
                 return;
             }
             // console.log("No cached works found, proceeding to add pending for ID:", id);

@@ -41,18 +41,38 @@ Authoring publication from homepage. Assume all dois in the homepage are publish
                 return cacheResult.item;
             }
             try {
-                const response = await fetch(url);
-                if (!response.ok) {
-                    await cacheHelper.addEntry(url, []);
-                    return;
+                const TIMEOUT_MS = 15000; // adjust as needed
+                // Use AbortController from global scope (available in Node.js 15+)
+                const AbortController = globalThis.AbortController;
+                if (!AbortController) {
+                    throw new Error('AbortController not available. Please use Node.js 15 or higher.');
                 }
-                const html = await response.text();
-                const dois = helper.extractDOIs(html);
-                await cacheHelper.addEntry(url, dois);
-                return dois;
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+                try {
+                    const response = await fetch(url, { signal: controller.signal });
+                    if (!response || !response.ok) {
+                        await cacheHelper.addEntry(url, []);
+                        return;
+                    }
+                    const html = await response.text();
+                    const dois = helper.extractDOIs(html);
+                    await cacheHelper.addEntry(url, dois);
+                    return dois;
+                } finally {
+                    clearTimeout(timeoutId);
+                }
             } catch (err) {
-                console.error("Error processing request:", err.message);
-                await cacheHelper.addEntry(url, []);
+                if (err && err.name === 'AbortError') {
+                    console.error('Fetch aborted (timeout) for URL:', url);
+                } else {
+                    console.error('Error processing request:', err && err.message ? err.message : err);
+                }
+                try {
+                    await cacheHelper.addEntry(url, []);
+                } catch (cacheErr) {
+                    console.error('Failed to write empty cache entry for', url, cacheErr);
+                }
             }
 
 
